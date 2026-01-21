@@ -24,30 +24,16 @@ class Mirror(Instruments):
             theta = np.pi/2- np.arctan(my/mx)
         else :
             theta = 0
-        kx_theta = kx_init*np.cos(2*theta) - ky_init*np.sin(2*theta)
-        ky_theta = - ky_init*np.cos(2*theta) - kx_init*np.sin(2*theta)
+        kx_theta = kx_init*np.cos(2*theta) + ky_init*np.sin(2*theta)
+        ky_theta = - ky_init*np.cos(2*theta) + kx_init*np.sin(2*theta)
         k_out = (kx_theta, ky_theta)
         return Laser(wvl, k_out)
    
-    # def display(self, position):
-    #     x_position, y_position = position
-    #     x_array = np.linspace(x_position - 1, x_position + 1)
-    #     mx, my = self.orientation
-    #     if mx != 0:
-    #         y_array = (my/mx)*(x_array-x_position) + y_position
-    #         return (x_array, y_array)
-    #     else :
-    #         y_array = np.linspace(y_position - 1, y_position +1) 
-    #         return (x_array, y_array)
-        # print(y_array)
-        # max_length = 2
-        # if len(y_array) > 2:
-        #     y_array_corrected = y_array[len(y_array)//2]
     def display(self, position, length = 2):
         x_position, y_position = position
         mx, my = self.orientation
         if mx != 0:
-            theta = np.arctan(my/mx) + np.pi/2
+            theta = np.pi/2 - np.arctan(my/mx)
         else :
             theta = 0
         x_max = x_position + np.cos(theta)*length/2
@@ -70,7 +56,7 @@ class TableOptique(dict):
     def draw(self):
         for optics in self.keys():
             x_array, y_array = optics.display(self[optics])
-            plt.plot(x_array, y_array)
+            plt.plot(x_array, y_array, color = "red")
         xlim, ylim = self.size
         plt.xlim(-xlim/2, xlim/2)
         plt.ylim(-ylim/2, ylim/2)
@@ -97,30 +83,48 @@ class TableOptique(dict):
                 i_xmax_optics = np.argmax(x_array_optics)
                 i_xmin_optics = np.argmin(x_array_optics)
 
-                kmax_x, kmax_y = (x_array_optics[i_xmax_optics] - x_init, y_array_optics[i_xmax_optics] - y_init)
-                kmin_x, kmin_y = (x_array_optics[i_xmin_optics] - x_init, y_array_optics[i_xmin_optics] - y_init)
+                i_ymax_optics = np.argmax(y_array_optics)
+                i_ymin_optics = np.argmin(y_array_optics)
+
+                kmax_x, kmax_y = (x_array_optics[i_xmax_optics] - x_init, y_array_optics[i_ymax_optics] - y_init)
+                kmin_x, kmin_y = (x_array_optics[i_xmin_optics] - x_init, y_array_optics[i_ymin_optics] - y_init)
 
                 norm_max = np.sqrt(kmax_x**2 + kmax_y**2)
                 norm_min = np.sqrt(kmin_x**2 + kmin_y**2)
 
                 i = 0
                 if optics not in used_optics:
-                    print("x_init", x_init)
-                    print(optics.orientation)
-                    if (kmin_x/norm_min >= kx_init/norm_init >= kmax_x/norm_max or kmin_x/norm_min <= kx_init/norm_init <= kmax_x/norm_max) and i < 1 :
-                        print("test 1")
-                        if (kmin_y/norm_min >= ky_init/norm_init >= kmax_y/norm_max or kmax_y/norm_max >= ky_init/norm_init >= kmin_y/norm_min) and i < 1:
+                    print(kmin_y/norm_min, ky_init/norm_init, kmax_y/norm_max)
+                    print(kmin_x/norm_min >= kx_init/norm_init >= kmax_x/norm_max or kmin_x/norm_min <= kx_init/norm_init <= kmax_x/norm_max)
+                    testx = kmin_x/norm_min >= kx_init/norm_init >= kmax_x/norm_max or kmin_x/norm_min <= kx_init/norm_init <= kmax_x/norm_max
+                    testy = kmin_y/norm_min >= ky_init/norm_init >= kmax_y/norm_max or kmax_y/norm_max >= ky_init/norm_init >= kmin_y/norm_min
+                    print(testx)
+                    print(testy)
+                    
+                    if (testx or testy) and i < 1:
                             i+=1
-                            coef_miroir = (y_array_optics[i_xmax_optics] - y_array_optics[i_xmin_optics])/(x_array_optics[i_xmax_optics] - x_array_optics[i_xmin_optics])
-                            coef_laser = ky_init/kx_init
-                            x_intersect = (y_init-y_optics + coef_miroir*x_optics - coef_laser*x_init)/(coef_miroir-coef_laser)
-                            y_intersect = coef_miroir*(x_intersect-x_optics) + y_optics
+                            if x_array_optics[i_xmax_optics] - x_array_optics[i_xmin_optics] != 0:
+                                coef_miroir = (y_array_optics[i_xmax_optics] - y_array_optics[i_xmin_optics])/(x_array_optics[i_xmax_optics] - x_array_optics[i_xmin_optics])
+                                coef_laser = ky_init/kx_init
 
-                            x_array.append(x_intersect)
-                            y_array.append(y_intersect)
-                            x_init, y_init = x_intersect, y_intersect
-                            ray = optics.reflect(ray)
-                            used_optics.append(optics)
+                                if coef_miroir-coef_laser != 0:
+                                    x_intersect = (y_init-y_optics + coef_miroir*x_optics - coef_laser*x_init)/(coef_miroir-coef_laser)
+                                    y_intersect = coef_miroir*(x_intersect-x_optics) + y_optics
+
+                                    x_array.append(x_intersect)
+                                    y_array.append(y_intersect)
+                                    x_init, y_init = x_intersect, y_intersect
+                                    ray = optics.reflect(ray)
+                                    used_optics.append(optics)
+                                    
+
+                                else :
+                                    x_array.append(x_optics)
+                                    y_array.append(y_optics)
+                                    return (x_array, y_array)
+                            else :
+                                print("not implemented yet...")
+                            
             if i == 0:
                 x_array.append(x_array[-1] + d_pos*kx_init)
                 y_array.append(y_array[-1] + d_pos*ky_init)
@@ -132,12 +136,12 @@ class TableOptique(dict):
         plt.plot(x_array, y_array)
         # plt.show()
 
-k = (2,1)
+k = (5,3.5)
 rayon = Laser(620, k)
-mirror1 = Mirror((1,1), 1)
-mirror2 = Mirror((0.01,1), 1)
+mirror1 = Mirror((10,0.001), 1)
+mirror2 = Mirror((1,0), 1)
 table = TableOptique((20,20))
-table.add(mirror1, (4,4))
+table.add(mirror1, (3,4))
 table.add(mirror2, (0,-5))
 
 table.draw()
