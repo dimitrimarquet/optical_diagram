@@ -1,6 +1,7 @@
 from msilib.schema import InstallUISequence
 import numpy as np
 import matplotlib.pyplot as plt
+from test_wvl import wavelength_to_rgb
 
 class Laser():
     """
@@ -205,8 +206,8 @@ class TableOptique(dict):
                 i_ymax_optics = np.argmax(y_array_optics)
                 i_ymin_optics = np.argmin(y_array_optics)
 
-                kmax_x, kmax_y = (x_array_optics[i_xmax_optics] - x_init, y_array_optics[i_ymax_optics] - y_init)
-                kmin_x, kmin_y = (x_array_optics[i_xmin_optics] - x_init, y_array_optics[i_ymin_optics] - y_init)
+                kmax_x, kmax_y = (x_array_optics[i_xmax_optics] - x_init, y_array_optics[i_xmax_optics] - y_init)
+                kmin_x, kmin_y = (x_array_optics[i_xmin_optics] - x_init, y_array_optics[i_xmin_optics] - y_init)
 
                 norm_max = np.sqrt(kmax_x**2 + kmax_y**2)
                 norm_min = np.sqrt(kmin_x**2 + kmin_y**2)
@@ -251,11 +252,17 @@ class TableOptique(dict):
             position_source (tuple): Position initiale (x, y) du faisceau.
         """
         x_array, y_array = self.path_laser(laser, position_source)
-        plt.plot(x_array, y_array)
+        color = wavelength_to_rgb(laser.wavelength)
+        r = color[0]
+        g = color[1]
+        b = color[2]
+        plt.plot(x_array, y_array, color = (r/256,g/256,b/256))
         # plt.show()
 
-k = (1,1)
-rayon = Laser(620, k)
+k = (2.1,1)
+k2 = (-2.1, -1)
+rayon = Laser(700, k)
+rayon2 = Laser(600, k2)
 # mirror1 = Mirror((0,1), 1)
 # mirror2 = Mirror((1,0.001), 1)
 # mirror3 = Mirror((-1,159), 1)
@@ -269,13 +276,15 @@ table = TableOptique((20,20))
 
 #test_cavity
 
-mirror1 = Mirror((1,1), 1)
-mirror2 = Mirror((1,1), 1)
+mirror1 = Mirror((6,2), 1)
+mirror2 = Mirror((6,2), 1)
 
-table.add(mirror1, (4,4))
-table.add(mirror2, (-4,-4))
+table.add(mirror1, (4,2))
+table.add(mirror2, (-4,-2))
 table.draw()
 table.draw_laser(rayon, (0,0))
+table.draw_laser(rayon2, (0,0))
+
 # print(mirror.reflect(rayon).k_vector)
 
 plt.show()
