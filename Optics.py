@@ -93,7 +93,101 @@ class Mirror(Instruments):
         x_array = np.linspace(x_min, x_max, 10)
         y_array = np.linspace(y_min, y_max, 10)
 
-        return (x_array, y_array)
+        return [(x_array, y_array)]
+
+class BeamSplitter(Instruments):
+    """
+    Représente un beamsplitter (lame séparatrice) qui divise le faisceau en deux.
+    - Une partie est réfléchie (comme un miroir).
+    - Une partie est transmise (traverse tout droit).
+    
+    Attributs:
+        orientation (tuple): Vecteur d'orientation (mx, my).
+        ratio (float): Ratio de transmission/réflexion de 0.5 pour un BS 50:50).
+    """
+
+    def __init__(self, orientation_vector, ratio=0.5):
+        self.orientation = orientation_vector
+        self.ratio = ratio  # 0.5 signifie 50% transmis, 50% réfléchis
+
+    def reflect(self, rayon):
+        """
+        Gère la partie RÉFLÉCHIE du faisceau (Comportement identique au Miroir).
+        """
+        k_init = rayon.k_vector
+        wvl = rayon.wavelength
+        mx, my = self.orientation
+        kx_init, ky_init = k_init
+        
+        # Calcul de theta (angle d'inclinaison)
+        if mx != 0:
+            theta = -np.pi/2 + np.arctan(my/mx) 
+        else :
+            theta = 0
+
+        # Calcul du vecteur k réfléchi (loi de la réflexion)
+        kx_theta = kx_init*np.cos(2*theta) + ky_init*np.sin(2*theta)
+        ky_theta = - ky_init*np.cos(2*theta) + kx_init*np.sin(2*theta)
+        k_out = (kx_theta, ky_theta)
+
+        # On renvoie un NOUVEAU laser qui part dans la direction réfléchie
+        return Laser(wvl, k_out)
+
+    def transmit(self, rayon):
+        """
+        Gère la partie TRANSMISE du faisceau.
+        Dans un modèle simple (lame mince), le vecteur k ne change pas de direction.
+        """
+        # Le faisceau continue tout droit : même vecteur k, même longueur d'onde
+        return Laser(rayon.wavelength, rayon.k_vector)
+   
+    def display(self, position, length=2):
+        """
+        Affiche un Cube Séparateur (BeamSplitter Cube).
+        La 'length' définit la diagonale du cube (la surface active).
+        Le cube est construit autour de cette diagonale.
+        """
+        xc, yc = position
+        mx, my = self.orientation
+
+        # 1. Calcul de l'angle (Theta)
+        if mx != 0:
+            theta = -np.pi/2 + np.arctan(my/mx)
+        else:
+            theta = 0
+
+        # 2. Calcul des vecteurs
+        # Rayon du cercle qui englobe le carré (demi-longueur de la diagonale)
+        r = length / 2
+        
+        # Décalage pour la diagonale principale (Surface active)
+        dx = r * np.cos(theta)
+        dy = r * np.sin(theta)
+
+        # 3. Calcul des 4 coins du carré
+        # Coin 1 et 2 : Les extrémités du miroir (Diagonale active)
+        p1 = (xc - dx, yc - dy)
+        p2 = (xc + dx, yc + dy)
+        
+        # Coin 3 et 4 : Les autres coins (obtenus par rotation de 90° du vecteur dx,dy)
+        # Vecteur perpendiculaire à (dx, dy) est (-dy, dx)
+        p3 = (xc - dy, yc + dx)
+        p4 = (xc + dy, yc - dx)
+
+        # 4. Construction des tracés
+        
+        # SEGMENT A (Bleu) : La diagonale active (de P1 à P2)
+        x_diag = np.array([p1[0], p2[0]])
+        y_diag = np.array([p1[1], p2[1]])
+
+        # SEGMENT B (Noir) : Le contour du carré
+        # On relie les points dans l'ordre du périmètre : P1 -> P4 -> P2 -> P3 -> P1
+        # (L'ordre P3/P4 dépend du sens trigo, mais tant qu'on fait le tour, c'est bon)
+        x_box = np.array([p1[0], p4[0], p2[0], p3[0], p1[0]])
+        y_box = np.array([p1[1], p4[1], p2[1], p3[1], p1[1]])
+
+        return [(x_diag, y_diag), (x_box, y_box)]
+
 
 class TableOptique(dict):
     """
@@ -122,16 +216,30 @@ class TableOptique(dict):
         """
 
         for optics in self.keys():
-            x_array, y_array = optics.display(self[optics])
-            plt.plot(x_array, y_array, color = "red")
+
+            list_of_segments = optics.display(self[optics])
+
+            if isinstance(optics, BeamSplitter): 
+                xd,yd = list_of_segments[0]
+                plt.plot(xd, yd, 'k-', linewidth=2, zorder = 10)
+
+                xc,yc = list_of_segments[1]
+                plt.plot(xc, yc, 'k-', linewidth = 2  )
+
+            elif isinstance(optics, Mirror):
+                xm, ym = list_of_segments[0]
+                plt.plot(xm,ym, "k-", linewidth = 2, zorder = 10)
+            #x_array, y_array = optics.display(self[optics])
+            #plt.plot(x_array, y_array, color = "red")
         
         #matplotlib adjustments
         xlim, ylim = self.size
         plt.xlim(-xlim/2, xlim/2)
         plt.ylim(-ylim/2, ylim/2)
         plt.gca().set_aspect('equal', adjustable='box')
+        #plt.grid(True, linestyler = '--', alpha = 0.5)
     
-    def path_laser(self, laser, position_init):
+    def path_laser(self, laser, position_init, segments=None):
         """
         Calcule le trajet d'un faisceau laser sur la table optique.
 
@@ -143,6 +251,9 @@ class TableOptique(dict):
         Returns:
             tuple: Deux listes (x_array, y_array) représentant le trajet du faisceau.
         """
+        if segments is None:
+            segments = []
+
         ray = laser
         x_init, y_init = position_init #position of the source of the laser
         x_size, y_size = self.size #dimensions of the table
@@ -152,7 +263,9 @@ class TableOptique(dict):
         used_optics = [] #to avoid the program to loop on the same optics -> to modify for cavities !!
 
         i = 0
-        while np.abs(x_array[-1]) < x_size/2 and np.abs(y_array[-1]) < y_size/2 and i < 100:
+        running = True 
+
+        while running and np.abs(x_array[-1]) < x_size/2 and np.abs(y_array[-1]) < y_size/2 and i < 100:
 
             #finding of the potential optics that could be touched by the laser considering its initial k vector, using the cone approach
             list_optics_in_cone = []
@@ -160,8 +273,13 @@ class TableOptique(dict):
             norm_init = np.sqrt(kx_init**2 + ky_init**2)
 
             for optics in self.keys():
+
+                if len(used_optics) > 0 and optics == used_optics[-1]:
+                    continue
+
                 x_optics, y_optics = self[optics]
-                x_array_optics, y_array_optics = optics.display(self[optics])
+                segments_display = optics.display(self[optics])
+                x_array_optics, y_array_optics =segments_display[0]
 
                 i_xmax_optics = np.argmax(x_array_optics)
                 i_xmin_optics = np.argmin(x_array_optics)
@@ -198,7 +316,8 @@ class TableOptique(dict):
 
                 #calculation of the intersection point and reflection except in the case where the laser comes on the laser side
                 x_optics, y_optics = position_optics
-                x_array_optics, y_array_optics = optics.display(position_optics)
+                segments_display = optics.display(position_optics)
+                x_array_optics, y_array_optics = segments_display[0]
 
                 i_xmax_optics = np.argmax(x_array_optics)
                 i_xmin_optics = np.argmin(x_array_optics)
@@ -221,6 +340,16 @@ class TableOptique(dict):
                         y_intersect = coef_miroir*(x_intersect-x_optics) + y_optics
                         x_array.append(x_intersect)
                         y_array.append(y_intersect)
+                        
+                        #Prise en compte du Beam Splitter
+                        if isinstance(optics, BeamSplitter): 
+                            transmitted_ray = optics.transmit(ray) #calcul du rayon transmis
+                            segments.append((list(x_array), list(y_array))) #sauvergard du chemin actuel avant de partir 
+                            self.path_laser(transmitted_ray, (x_intersect,y_intersect),segments) #Relance de la fonction pour le rayon transmis
+
+                            x_array = [x_intersect]
+                            y_array = [y_intersect]
+
                         x_init, y_init = x_intersect, y_intersect
                         ray = optics.reflect(ray)
                         used_optics.append(optics)
@@ -239,8 +368,9 @@ class TableOptique(dict):
                 x_array.append(x_array[-1] + d_pos*kx_init)
                 y_array.append(y_array[-1] + d_pos*ky_init)
             i += 1
-                                    
-        return (x_array, y_array)
+
+        segments.append((x_array, y_array))                     
+        return segments
     
     def draw_laser(self, laser, position_source):
         """
@@ -250,11 +380,14 @@ class TableOptique(dict):
             laser (Laser): Faisceau laser à afficher.
             position_source (tuple): Position initiale (x, y) du faisceau.
         """
-        x_array, y_array = self.path_laser(laser, position_source)
-        plt.plot(x_array, y_array)
+        all_segments = self.path_laser(laser, position_source)
+        for x_array, y_array in all_segments:
+            plt.plot(x_array, y_array)
         # plt.show()
 
-k = (1,1)
+
+
+k = (1,0)
 rayon = Laser(620, k)
 # mirror1 = Mirror((0,1), 1)
 # mirror2 = Mirror((1,0.001), 1)
@@ -271,11 +404,14 @@ table = TableOptique((20,20))
 
 mirror1 = Mirror((1,1), 1)
 mirror2 = Mirror((1,1), 1)
+BS1 = BeamSplitter((1,1),1)
 
-table.add(mirror1, (4,4))
-table.add(mirror2, (-4,-4))
+table.add(mirror1, (4,-5))
+table.add(mirror2, (8,0))
+table.add(BS1,(4,0))
 table.draw()
 table.draw_laser(rayon, (0,0))
 # print(mirror.reflect(rayon).k_vector)
+
 
 plt.show()
