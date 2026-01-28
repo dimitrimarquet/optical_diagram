@@ -11,9 +11,10 @@ class Laser():
         wavelength (float): Longueur d'onde du laser (en nm ou m selon l'unité choisie).
         k_vector (tuple): Vecteur d'onde (k_x, k_y) représentant la direction de propagation.
     """
-    def __init__(self, wavelength, k_vector):
+    def __init__(self, wavelength, k_vector, intensity = 1):
         self.wavelength = wavelength
         self.k_vector = k_vector
+        self.intensity = intensity
 
 class Instruments():
     """
@@ -117,6 +118,7 @@ class BeamSplitter(Instruments):
         """
         k_init = rayon.k_vector
         wvl = rayon.wavelength
+        intensity = rayon.intensity
         mx, my = self.orientation
         kx_init, ky_init = k_init
         
@@ -132,7 +134,7 @@ class BeamSplitter(Instruments):
         k_out = (kx_theta, ky_theta)
 
         # On renvoie un NOUVEAU laser qui part dans la direction réfléchie
-        return Laser(wvl, k_out)
+        return Laser(wvl, k_out, intensity = self.ratio*intensity)
 
     def transmit(self, rayon):
         """
@@ -140,7 +142,7 @@ class BeamSplitter(Instruments):
         Dans un modèle simple (lame mince), le vecteur k ne change pas de direction.
         """
         # Le faisceau continue tout droit : même vecteur k, même longueur d'onde
-        return Laser(rayon.wavelength, rayon.k_vector)
+        return Laser(rayon.wavelength, rayon.k_vector, intensity = (1-self.ratio)*(rayon.intensity))
    
     def display(self, position, length=2):
         """
@@ -260,6 +262,7 @@ class TableOptique(dict):
         x_size, y_size = self.size #dimensions of the table
         x_array = [x_init] #array of x coordinates needed for tracing the laser path
         y_array = [y_init] #array of y coordinates needed for tracing the laser path
+        intensity_array = [ray.intensity]
         d_pos = np.sqrt(x_size**2 + y_size**2)*2 #max distance to calculate
         used_optics = [] #to avoid the program to loop on the same optics -> to modify for cavities !!
 
@@ -342,23 +345,27 @@ class TableOptique(dict):
                         x_array.append(x_intersect)
                         y_array.append(y_intersect)
                         
+                        
                         #Prise en compte du Beam Splitter
                         if isinstance(optics, BeamSplitter): 
                             transmitted_ray = optics.transmit(ray) #calcul du rayon transmis
                             segments.append((list(x_array), list(y_array))) #sauvergard du chemin actuel avant de partir 
                             self.path_laser(transmitted_ray, (x_intersect,y_intersect),segments) #Relance de la fonction pour le rayon transmis
 
-                            x_array = [x_intersect]
-                            y_array = [y_intersect]
+                            x_array.append(x_intersect)
+                            y_array.append(y_intersect)
+                            # intensity_array.append()
 
                         x_init, y_init = x_intersect, y_intersect
                         ray = optics.reflect(ray)
+                        intensity_array.append(ray.intensity)
                         used_optics.append(optics)
                         print("used_optics", self[used_optics[-1]])
 
                     else :
                         x_array.append(x_optics)
                         y_array.append(y_optics)
+                        intensity_array.append(ray.intensity)
                         return (x_array, y_array)
 
                 else : #if the mirror is along y
@@ -368,9 +375,11 @@ class TableOptique(dict):
             else:
                 x_array.append(x_array[-1] + d_pos*kx_init)
                 y_array.append(y_array[-1] + d_pos*ky_init)
+                intensity_array.append(ray.intensity)
             i += 1
 
-        segments.append((x_array, y_array))                     
+        segments.append((x_array, y_array))  
+        print("int", (segments))                   
         return segments
     
     def draw_laser(self, laser, position_source):
@@ -381,30 +390,25 @@ class TableOptique(dict):
             laser (Laser): Faisceau laser à afficher.
             position_source (tuple): Position initiale (x, y) du faisceau.
         """
-<<<<<<< HEAD
-        x_array, y_array = self.path_laser(laser, position_source)
+        all_segments = self.path_laser(laser, position_source)
         color = wavelength_to_rgb(laser.wavelength)
         r = color[0]
         g = color[1]
         b = color[2]
-        plt.plot(x_array, y_array, color = (r/256,g/256,b/256))
-        # plt.show()
-
-k = (2.1,1)
-k2 = (-2.1, -1)
-rayon = Laser(700, k)
-rayon2 = Laser(600, k2)
-=======
-        all_segments = self.path_laser(laser, position_source)
+        k = 0
         for x_array, y_array in all_segments:
-            plt.plot(x_array, y_array)
+            plt.plot(x_array, y_array, color = (r/256,g/256,b/256, 1))
+            k+=1
         # plt.show()
 
 
 
-k = (1,0)
-rayon = Laser(620, k)
->>>>>>> 58afedac8d713e989bc91445621b46616646f20e
+k = (1.05,1)
+# k = (2.1,1)
+# k2 = (-2.1, -1)
+rayon = Laser(400, k)
+# rayon2 = Laser(600, k2)
+# rayon = Laser(620, k)
 # mirror1 = Mirror((0,1), 1)
 # mirror2 = Mirror((1,0.001), 1)
 # mirror3 = Mirror((-1,159), 1)
@@ -418,24 +422,21 @@ table = TableOptique((20,20))
 
 #test_cavity
 
-<<<<<<< HEAD
-mirror1 = Mirror((6,2), 1)
-mirror2 = Mirror((6,2), 1)
-
-table.add(mirror1, (4,2))
-table.add(mirror2, (-4,-2))
-=======
-mirror1 = Mirror((1,1), 1)
+mirror1 = Mirror((1,-2), 1)
 mirror2 = Mirror((1,1), 1)
-BS1 = BeamSplitter((1,1),1)
+mirror3 = Mirror((1,1), 1)
 
-table.add(mirror1, (4,-5))
-table.add(mirror2, (8,0))
-table.add(BS1,(4,0))
->>>>>>> 58afedac8d713e989bc91445621b46616646f20e
+BS1 = BeamSplitter((1,1),ratio=0.6)
+BS2 = BeamSplitter((1,1),ratio=1)
+
+# table.add(mirror1, (8.79,7.4))
+# table.add(mirror3, (-6,-3))
+table.add(BS1,(5,5))
+table.add(BS2,(-5,-5))
+
 table.draw()
 table.draw_laser(rayon, (0,0))
-table.draw_laser(rayon2, (0,0))
+# table.draw_laser(rayon2, (0,0))
 
 # print(mirror.reflect(rayon).k_vector)
 
