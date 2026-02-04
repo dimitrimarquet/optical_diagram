@@ -26,7 +26,8 @@ class Instruments():
     """
     Classe de base pour tous les instruments optiques.
     """
-    def __init__(self):
+    def __init__(self, name):
+        self.name = name
         pass
 
 class Mirror(Instruments):
@@ -38,7 +39,8 @@ class Mirror(Instruments):
         reflectivity (float): Coefficient de réflectivité du miroir (0 à 1).
     """
 
-    def __init__(self, orientation_vector, reflectivity):
+    def __init__(self, orientation_vector, reflectivity, name = 'Mirror'):
+        super().__init__(name)
         self.orientation = orientation_vector
         self.reflectivity = reflectivity
 
@@ -301,35 +303,65 @@ class TableOptique(dict):
         """
         self[optics] = position
 
-    def draw(self):
+    def remove(self, optics):
+        if optics in self.keys():
+            del self[optics]
+        else :
+            print('unknown optics')
+
+    def draw(self, ax = None):
         """
         Affiche tous les instruments optiques présents sur la table.
         """
+        if ax == None :
+            for optics in self.keys():
 
-        for optics in self.keys():
+                list_of_segments = optics.display(self[optics])
 
-            list_of_segments = optics.display(self[optics])
+                if isinstance(optics, BeamSplitter): 
+                    xd,yd = list_of_segments[0]
+                    plt.plot(xd, yd, 'k-', linewidth=2, zorder = 10)
 
-            if isinstance(optics, BeamSplitter): 
-                xd,yd = list_of_segments[0]
-                plt.plot(xd, yd, 'k-', linewidth=2, zorder = 10)
+                    xc,yc = list_of_segments[1]
+                    plt.plot(xc, yc, 'k-', linewidth = 2  )
 
-                xc,yc = list_of_segments[1]
-                plt.plot(xc, yc, 'k-', linewidth = 2  )
+                elif isinstance(optics, Mirror):
+                    xm, ym = list_of_segments[0]
+                    plt.plot(xm,ym, "k-", linewidth = 2, zorder = 10)
 
-            elif isinstance(optics, Mirror):
-                xm, ym = list_of_segments[0]
-                plt.plot(xm,ym, "k-", linewidth = 2, zorder = 10)
+                elif isinstance(optics, Polarizer):
+                    xc, yc = list_of_segments[0]
+                    xa, ya = list_of_segments[1]
 
-            elif isinstance(optics, Polarizer):
-                 xc, yc = list_of_segments[0]
-                 xa, ya = list_of_segments[1]
+                    #  plt.plot(xc, yc, color="magenta", linewidth=3, alpha=0.5, label="Polarizer Body")
+                    #  plt.plot(xa, ya, color="black", linewidth=2, label="Axis") 
+                    plt.plot(xc, yc, color="magenta", linewidth=3, alpha=0.5)
+                    plt.plot(xa, ya, color="black", linewidth=2) 
+        else:
+            print('test')
+            for optics in self.keys():
+                list_of_segments = optics.display(self[optics])
 
-                #  plt.plot(xc, yc, color="magenta", linewidth=3, alpha=0.5, label="Polarizer Body")
-                #  plt.plot(xa, ya, color="black", linewidth=2, label="Axis") 
-                 plt.plot(xc, yc, color="magenta", linewidth=3, alpha=0.5)
-                 plt.plot(xa, ya, color="black", linewidth=2) 
-        
+                if isinstance(optics, BeamSplitter): 
+                    xd,yd = list_of_segments[0]
+                    ax.plot(xd, yd, 'k-', linewidth=2, zorder = 10)
+
+                    xc,yc = list_of_segments[1]
+                    ax.plot(xc, yc, 'k-', linewidth = 2  )
+
+                elif isinstance(optics, Mirror):
+                    xm, ym = list_of_segments[0]
+                    ax.plot(xm,ym, "k-", linewidth = 2, zorder = 10)
+
+                elif isinstance(optics, Polarizer):
+                    xc, yc = list_of_segments[0]
+                    xa, ya = list_of_segments[1]
+
+                    #  plt.plot(xc, yc, color="magenta", linewidth=3, alpha=0.5, label="Polarizer Body")
+                    #  plt.plot(xa, ya, color="black", linewidth=2, label="Axis") 
+                    ax.plot(xc, yc, color="magenta", linewidth=3, alpha=0.5)
+                    ax.plot(xa, ya, color="black", linewidth=2) 
+
         #matplotlib adjustments
         xlim, ylim = self.size
         plt.xlim(-xlim/2, xlim/2)
@@ -389,8 +421,13 @@ class TableOptique(dict):
                 i_ymax_optics = np.argmax(y_array_optics)
                 i_ymin_optics = np.argmin(y_array_optics)
 
-                kmax_x, kmax_y = (x_array_optics[i_xmax_optics] - x_init, y_array_optics[i_xmax_optics] - y_init)
-                kmin_x, kmin_y = (x_array_optics[i_xmin_optics] - x_init, y_array_optics[i_xmin_optics] - y_init)
+                if i_xmax_optics != i_xmin_optics:
+                    kmax_x, kmax_y = (x_array_optics[i_xmax_optics] - x_init, y_array_optics[i_xmax_optics] - y_init)
+                    kmin_x, kmin_y = (x_array_optics[i_xmin_optics] - x_init, y_array_optics[i_xmin_optics] - y_init)
+                else :
+                    kmax_x, kmax_y = (x_array_optics[i_ymax_optics] - x_init, y_array_optics[i_ymax_optics] - y_init)
+                    kmin_x, kmin_y = (x_array_optics[i_ymin_optics] - x_init, y_array_optics[i_ymin_optics] - y_init)
+
 
                 norm_max = np.sqrt(kmax_x**2 + kmax_y**2)
                 norm_min = np.sqrt(kmin_x**2 + kmin_y**2)
@@ -400,8 +437,11 @@ class TableOptique(dict):
                 scalar_min = np.dot(np.array([kmin_x, kmin_y])/norm_min, np.array([kx_init, ky_init])/norm_init)
 
                 #test to be in the cone if the angle with respect to x is between the two
-                test_max = np.arccos(scalar_max) < np.arccos(np.dot(np.array([kmax_x, kmax_y])/norm_max, np.array([kmin_x, kmin_y])/norm_min))
-                test_min = np.arccos(scalar_min) < np.arccos(np.dot(np.array([kmax_x, kmax_y])/norm_max, np.array([kmin_x, kmin_y])/norm_min))
+                test_max = np.arccos(min(scalar_max, 1)) < np.arccos(min(np.dot(np.array([kmax_x, kmax_y])/norm_max, np.array([kmin_x, kmin_y])/norm_min), 1))
+                test_min = np.arccos(min(scalar_min, 1)) < np.arccos(min(np.dot(np.array([kmax_x, kmax_y])/norm_max, np.array([kmin_x, kmin_y])/norm_min), 1))
+                print('test', np.array([kmax_x, kmax_y])/norm_max)
+                print('test', np.array([kmin_x, kmin_y])/norm_min)
+
                 test_optics_in_cone = scalar_max > 0 and scalar_min > 0 and test_max and test_min
 
                 if test_optics_in_cone and optics not in used_optics[-1:]:
@@ -426,11 +466,15 @@ class TableOptique(dict):
 
                 i_xmax_optics = np.argmax(x_array_optics)
                 i_xmin_optics = np.argmin(x_array_optics)
-                # i_ymax_optics = np.argmax(y_array_optics)
-                # i_ymin_optics = np.argmin(y_array_optics)
+                i_ymax_optics = np.argmax(y_array_optics)
+                i_ymin_optics = np.argmin(y_array_optics)
 
-                kmax_x, kmax_y = (x_array_optics[i_xmax_optics] - x_init, y_array_optics[i_xmax_optics] - y_init)
-                kmin_x, kmin_y = (x_array_optics[i_xmin_optics] - x_init, y_array_optics[i_xmin_optics] - y_init)
+                if i_xmax_optics != i_xmin_optics:
+                    kmax_x, kmax_y = (x_array_optics[i_xmax_optics] - x_init, y_array_optics[i_xmax_optics] - y_init)
+                    kmin_x, kmin_y = (x_array_optics[i_xmin_optics] - x_init, y_array_optics[i_xmin_optics] - y_init)
+                else :
+                    kmax_x, kmax_y = (x_array_optics[i_ymax_optics] - x_init, y_array_optics[i_ymax_optics] - y_init)
+                    kmin_x, kmin_y = (x_array_optics[i_ymin_optics] - x_init, y_array_optics[i_ymin_optics] - y_init)
 
                 norm_max = np.sqrt(kmax_x**2 + kmax_y**2)
                 norm_min = np.sqrt(kmin_x**2 + kmin_y**2)
@@ -503,7 +547,7 @@ class TableOptique(dict):
         segments.append((x_array, y_array, ray.intensity))  
         return segments
     
-    def draw_laser(self, laser, position_source):
+    def draw_laser(self, laser, position_source, ax = None):
         """
         Affiche le trajet d'un faisceau laser sur la table optique.
 
@@ -511,6 +555,7 @@ class TableOptique(dict):
             laser (Laser): Faisceau laser à afficher.
             position_source (tuple): Position initiale (x, y) du faisceau.
         """
+        
         all_segments = self.path_laser(laser, position_source)
         
         color = wavelength_to_rgb(laser.wavelength)
@@ -523,73 +568,76 @@ class TableOptique(dict):
             if valeur_intensity < 0.01:  
                 continue
             alpha_val = min(intensity, 1.0)
-            plt.plot(x_array, y_array, color = (r/256,g/256,b/256), linewidth = 1)
+            if ax == None:
+                plt.plot(x_array, y_array, color = (r/256,g/256,b/256), linewidth = 1)
+            else :
+                ax.plot(x_array, y_array, color = (r/256,g/256,b/256), linewidth = 1)
             k+=1
 
 
 
-k = (1,0)
-# k = (2.1,1)
-# k2 = (-2.1, -1)
+# k = (1,0)
+# # k = (2.1,1)
+# # k2 = (-2.1, -1)
 
-rayon = Laser(633, k, stokes_vector=[1,1,0,0])
-# rayon2 = Laser(600, k2)
-# rayon = Laser(620, k)
-# mirror1 = Mirror((0,1), 1)
-# mirror2 = Mirror((1,0.001), 1)
-# mirror3 = Mirror((-1,159), 1)
-# mirror4 = Mirror((150,1), 1)
+# rayon = Laser(633, k, stokes_vector=[1,1,0,0])
+# # rayon2 = Laser(600, k2)
+# # rayon = Laser(620, k)
+# # mirror1 = Mirror((0,1), 1)
+# # mirror2 = Mirror((1,0.001), 1)
+# # mirror3 = Mirror((-1,159), 1)
+# # mirror4 = Mirror((150,1), 1)
 
-table = TableOptique((20,20))
+# table = TableOptique((20,20))
 
 
-# table.add(mirror1, (-5,4))
-# table.add(mirror2, (-8.7,1.69))
-# table.add(mirror4, (-3.81,-1.82))
+# # table.add(mirror1, (-5,4))
+# # table.add(mirror2, (-8.7,1.69))
+# # table.add(mirror4, (-3.81,-1.82))
 
-#test_cavity
-
-mirror1 = Mirror((1,2), 1)
-mirror2 = Mirror((5,1), 1)
-mirror3 = Mirror((1,1), 1)
-mirror4 = Mirror((1,10), 1)
-mirror5 = Mirror((1,0.01), 1)
-mirror6 = Mirror((-0.1,1), 1)
-
-BS1 = BeamSplitter((1,1.1),ratio=0.3)
-P2 = Polarizer((0.1,1),90) 
-P4 = Polarizer((1,0.01),-45) 
-
-P3 = Mirror((0.25,1),1) 
-
-# laser_out = P2.transmit(rayon)
-# ###print(f"Intensité après Polariseur 90° : {laser_out.intensity:.5f}")
-
-table.add(mirror1, (7,0))
-table.add(mirror2, (1.8,-6.5))
-table.add(mirror4, (8.55,-2.2))
-table.add(mirror5, (5,0))
-table.add(mirror6, (1,6))
-
-table.add(BS1,(1,0.1))
-table.add(P2,(1.5,-5))
-table.add(P3,(1.7,-8))
-table.add(P4,(5.79, -4.79))
+# #test_cavity
 
 # mirror1 = Mirror((1,2), 1)
-# mirror3 = Mirror((1,2), 1)
+# mirror2 = Mirror((5,1), 1)
+# mirror3 = Mirror((1,1), 1)
+# mirror4 = Mirror((1,10), 1)
+# mirror5 = Mirror((1,0.01), 1)
+# mirror6 = Mirror((-0.1,1), 1)
 
-# mirror2 = Mirror((1,-1), 1)
-# mirror4 = Mirror((50,0.1), 1)
+# BS1 = BeamSplitter((1,1.1),ratio=0.3)
+# P2 = Polarizer((0.1,1),90) 
+# P4 = Polarizer((1,0.01),-45) 
+
+# P3 = Mirror((0.25,1),1) 
+
+# # laser_out = P2.transmit(rayon)
+# # ###print(f"Intensité après Polariseur 90° : {laser_out.intensity:.5f}")
+
 # table.add(mirror1, (7,0))
-# table.add(mirror3, (7.5,0.5))
-# table.add(mirror2, (4.82,3))
-# table.add(mirror4, (8.93,-2.58))
+# table.add(mirror2, (1.8,-6.5))
+# table.add(mirror4, (8.55,-2.2))
+# table.add(mirror5, (5,0))
+# table.add(mirror6, (1,6))
+
+# table.add(BS1,(1,0.1))
+# table.add(P2,(1.5,-5))
+# table.add(P3,(1.7,-8))
+# table.add(P4,(5.79, -4.79))
+
+# # mirror1 = Mirror((1,2), 1)
+# # mirror3 = Mirror((1,2), 1)
+
+# # mirror2 = Mirror((1,-1), 1)
+# # mirror4 = Mirror((50,0.1), 1)
+# # table.add(mirror1, (7,0))
+# # table.add(mirror3, (7.5,0.5))
+# # table.add(mirror2, (4.82,3))
+# # table.add(mirror4, (8.93,-2.58))
 
 
-table.draw()
-table.draw_laser(rayon, (0,0))
+# table.draw()
+# table.draw_laser(rayon, (0,0))
 
 
 
-plt.show()
+# plt.show()
