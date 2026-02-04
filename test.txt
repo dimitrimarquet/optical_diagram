@@ -1,0 +1,19 @@
+===RAPPORT DE SIMULATION OPTIQUE ===
+Source Lambda : 633 nm
+Source Stokes : [1, 1, 0, 0]
+----------------------------------------
+
+--- FAISCEAU DE SORTIE #1 ---
+Intensité Finale : 0.3000 (30.0% de l'entrée)
+Direction (k)    : (-0.980, -1.020)
+Angle            : -133.85 deg
+Vecteur Stokes   : [0.300, 0.300, 0.000, 0.000]
+Type Polarisation: Linéaire
+
+--- FAISCEAU DE SORTIE #2 ---
+Intensité Finale : 0.7000 (70.0% de l'entrée)
+Direction (k)    : (-0.980, 1.020)
+Angle            : 133.85 deg
+Vecteur Stokes   : [0.700, 0.700, 0.000, 0.000]
+Type Polarisation: Linéaire
+

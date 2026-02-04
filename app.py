@@ -25,12 +25,12 @@ from PyQt5.QtWidgets import (
 class MplCanvas(FigureCanvasQTAgg):
 
     def __init__(self, parent=None, width=200, height=200, dpi=100):
-        fig = Figure(figsize=(width, height), dpi=dpi)
-        self.axes = fig.add_subplot(111)
+        self.fig = Figure(figsize=(width, height), dpi=dpi)
+        self.axes = self.fig.add_subplot(111)
         # self.axes.set_xlim(-3,4)
         # self.axes.set_ylim(-3,4)
 
-        super().__init__(fig)
+        super().__init__(self.fig)
 
 
 class MainWindow(QMainWindow):
@@ -104,7 +104,7 @@ class MainWindow(QMainWindow):
         lblName_pol.setText("Polarization : ")
 
         qbtn_pol = QPushButton()
-        qbtn_pol.setText("Validate")
+        qbtn_pol.setText("Validate Pol")
         qbtn_pol.clicked.connect(self.set_polarization)
 
         first_btn_layout.addWidget(self.dialog_pol)
@@ -188,7 +188,12 @@ class MainWindow(QMainWindow):
         btn_draw_laser = QPushButton("Draw Laser")
         btn_draw_laser.pressed.connect(self.draw_laser)
         third_btn_layout.addWidget(btn_draw_laser)
+
+        btn_dwnl_results = QPushButton("Download")
+        btn_dwnl_results.pressed.connect(self.download)
+        third_btn_layout.addWidget(btn_dwnl_results)
         button_layout.addLayout(third_btn_layout)
+
         #drawing the laser path
 
 
@@ -226,7 +231,7 @@ class MainWindow(QMainWindow):
         self.laser.wavelength = i
 
     def set_polarization(self):
-        text = self.dialog_k.text()
+        text = self.dialog_pol.text()
         pol_array = np.array([float(text.split()[0]), float(text.split()[1]), float(text.split()[2]), float(text.split()[3])])
         self.laser.stokes_vector = pol_array
 
@@ -313,6 +318,10 @@ class MainWindow(QMainWindow):
         self.sc.axes.set_aspect('equal', adjustable='box')
 
         self.sc.draw()
+    
+    def download(self):
+        self.table.report(self.laser, self.pos_init, filename = "rapport_optique.tx")
+        self.sc.fig.savefig("optical_path.jpg")
 
 
 app = QApplication(sys.argv)

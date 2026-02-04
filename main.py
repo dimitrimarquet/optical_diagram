@@ -29,7 +29,7 @@ P3 = Optics.Mirror((0.25,1),1)
 table.add(mirror5, (4,0))
 # table.add(mirror6, (1,6))
 
-table.add(BS1,(4,-4))
+table.add(BS1,(0,-5))
 table.add(mirror1,(2,-2))
 
 # table.add(BS2,(5,-5))
@@ -51,5 +51,5 @@ table.add(P2, (5 ,0))
 
 table.draw()
 table.draw_laser(rayon, (0,0))
-
+table.report(rayon, (0,0), "test.txt")
 plt.show()
