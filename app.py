@@ -67,14 +67,21 @@ class MainWindow(QMainWindow):
         self.stacklayout.addWidget(self.sc)
 
         self.dialog_tab_size = QLineEdit()
-        lblName_tab_size = QLabel(self.dialog_tab_size)
-        lblName_tab_size.setText("Size table : ")
+        lblName_tab_size = QLabel("Table size")
+        # lblName_tab_size.setText("Size table : ")
         qbtn_tab_size = QPushButton()
-        qbtn_tab_size.setText("Validate")
+        qbtn_tab_size.setText("Validate table size")
         qbtn_tab_size.clicked.connect(self.set_tab_size)
+        lblName_tab_size.setAlignment(Qt.AlignLeft | Qt.AlignBottom)
+
+        zero_btn_layout.addWidget(lblName_tab_size)
 
         zero_btn_layout.addWidget(self.dialog_tab_size)
         zero_btn_layout.addWidget(qbtn_tab_size)
+
+        button_layout.setContentsMargins(0, 0, 0, 0)
+        button_layout.setSpacing(0)
+
         button_layout.addLayout(zero_btn_layout)
 
         #get wvl
@@ -154,7 +161,7 @@ class MainWindow(QMainWindow):
         # lblName_pol.setText("Polarization : ")
 
         qbtn_k = QPushButton()
-        qbtn_k.setText("Validate polarization")
+        qbtn_k.setText("Validate k vector")
         qbtn_k.clicked.connect(self.set_k_vector)
 
         # pol_button_layout.addWidget()
@@ -173,7 +180,7 @@ class MainWindow(QMainWindow):
 
         pos_layout = QVBoxLayout()
         self.dialog_pos = QLineEdit()
-        lblName_pos = QLabel("position_init : ")
+        lblName_pos = QLabel("Initial position : ")
         # lblName_pos.setText("position_init : ")
 
         qbtn_pos = QPushButton()
@@ -190,6 +197,9 @@ class MainWindow(QMainWindow):
         lblName_pos.setAlignment(Qt.AlignLeft | Qt.AlignBottom)
 
         first_btn_layout.addLayout(pos_layout)
+        k_button_layout.setContentsMargins(0, 0, 0, 0)
+        k_button_layout.setSpacing(0)
+
         button_layout.addLayout(first_btn_layout)
 
         #get and set optical elements
@@ -201,29 +211,83 @@ class MainWindow(QMainWindow):
         self.optics_list = QComboBox()
         self.optics_list.addItems(['Mirror', 'Beam splitter', 'Polarizer'])
         
+        #position
+        optics_pos = QVBoxLayout()
         self.dialog_pos_optics = QLineEdit()
-        lblName_pos_optics = QLabel(self.dialog_pos_optics)
-        lblName_pos_optics.setText("Position optics")
+        lblName_pos_optics = QLabel("Position optics")
+        lblName_pos_optics.setAlignment(Qt.AlignLeft | Qt.AlignBottom)
+        optics_pos.setContentsMargins(0, 0, 0, 0)
+        optics_pos.setSpacing(0)
+
+        optics_pos.addWidget(lblName_pos_optics)
+        optics_pos.addWidget(self.dialog_pos_optics)
+
+
+        #orientation
+        orient_layout = QVBoxLayout()
 
         self.dialog_orient_optics = QLineEdit()
-        lblName_orient_optics = QLabel(self.dialog_orient_optics)
-        lblName_orient_optics.setText("Orientation")
+        lblName_orient_optics = QLabel("Orientation")
+        # lblName_orient_optics.setText("Orientation")
+        lblName_orient_optics.setAlignment(Qt.AlignLeft | Qt.AlignBottom)
+        orient_layout.setContentsMargins(0, 0, 0, 0)
+        orient_layout.setSpacing(0)
 
+        orient_layout.addWidget(lblName_orient_optics)
+        orient_layout.addWidget(self.dialog_orient_optics)
+
+        #BS ratio
+        BS_ratio_layout = QVBoxLayout()
+
+        self.BS_ratio_dialog = QLineEdit()
+        lblName_BS_ratio = QLabel("BS ratio")
+        # lblName_orient_optics.setText("Orientation")
+        lblName_BS_ratio.setAlignment(Qt.AlignLeft | Qt.AlignBottom)
+        BS_ratio_layout.setContentsMargins(0, 0, 0, 0)
+        BS_ratio_layout.setSpacing(0)
+
+        BS_ratio_layout.addWidget(lblName_BS_ratio)
+        BS_ratio_layout.addWidget(self.BS_ratio_dialog)
+
+        self.BS_ratio_dialog.setEnabled(False)
+        self.optics_list.currentTextChanged.connect(self.enable_BS)
+
+        #polarizer angle
+        pola_angle_layout = QVBoxLayout()
+
+        self.pola_angle_dialog = QLineEdit()
+        lblName_pola_angle = QLabel("pola_angle")
+        # lblName_orient_optics.setText("Orientation")
+        lblName_pola_angle.setAlignment(Qt.AlignLeft | Qt.AlignBottom)
+        pola_angle_layout.setContentsMargins(0, 0, 0, 0)
+        pola_angle_layout.setSpacing(0)
+
+        pola_angle_layout.addWidget(lblName_pola_angle)
+        pola_angle_layout.addWidget(self.pola_angle_dialog)
+
+        self.pola_angle_dialog.setEnabled(False)
+        self.optics_list.currentTextChanged.connect(self.enable_pola_angle)
+
+        #add
         btn_add_optics = QPushButton("Add")
         btn_add_optics.pressed.connect(self.add_optics)
 
-        # btn_add_optics = QPushButton("Remove")
-        # btn_add_optics.pressed.connect(self.add_optics)
+        btn_rem_optics = QPushButton("Remove")
+        btn_rem_optics.pressed.connect(self.remove_optics)
 
         btn_clear_optics = QPushButton("Clear")
         btn_clear_optics.pressed.connect(self.clear_optics)
         
         second_btn_layout.addWidget(self.optics_list)
-        second_btn_layout.addWidget(self.dialog_pos_optics)
-        second_btn_layout.addWidget(self.dialog_orient_optics)
+        second_btn_layout.addLayout(optics_pos)
+        second_btn_layout.addLayout(orient_layout)
+        second_btn_layout.addLayout(BS_ratio_layout)
+        second_btn_layout.addLayout(pola_angle_layout)
 
  
         second_btn_layout.addWidget(btn_add_optics)
+        second_btn_layout.addWidget(btn_rem_optics)
+
         second_btn_layout.addWidget(btn_clear_optics)
 
         button_layout.addLayout(second_btn_layout)
@@ -240,6 +304,11 @@ class MainWindow(QMainWindow):
         btn_draw_laser = QPushButton("Draw Laser")
         btn_draw_laser.pressed.connect(self.draw_laser)
         third_btn_layout.addWidget(btn_draw_laser)
+
+        btn_clear_table = QPushButton("Clear Table")
+        btn_clear_table.pressed.connect(self.clear_table)
+        third_btn_layout.addWidget(btn_clear_table)
+
 
         btn_dwnl_results = QPushButton("Download")
         btn_dwnl_results.pressed.connect(self.download)
@@ -302,21 +371,6 @@ class MainWindow(QMainWindow):
 
 
     def add_optics(self):
-        # print('test1')
-        # print(self.setWindowTitle('test'))
-        # self.sc.axes.clear()
-        # table = Optics.TableOptique((20,20))
-        # self.sc.axes.set_xlim(-table.size[0]/2, table.size[0]/2)
-        # self.sc.axes.set_ylim(-table.size[1]/2, table.size[1]/2)
-
-        # table.add(Optics.Mirror((1,1), 1), (0,0))
-        # print('r')
-        # table.draw(self.sc.axes)
-        # self.sc.draw()
-        # self.btn2.setEnabled(False)
-        # self.list_widget.addItem(Optics.Mirror((1,1), 1).name)
-        # return True
-        
         text_pos = self.dialog_pos_optics.text()
         pos_optics = (float(text_pos.split()[0]), float(text_pos.split()[1]))
 
@@ -338,7 +392,25 @@ class MainWindow(QMainWindow):
             self.polarizer_index += 1
 
 
-    # def remove_optics(self):
+    def remove_optics(self):
+        self.table.popitem()
+        row = len(self.list_widget)
+        self.list_widget.takeItem(row-1)
+
+    def enable_BS(self):
+        print("ye")
+        print(self.optics_list.currentText())
+        if self.optics_list.currentText() == 'Beam splitter':
+            print('re')
+            self.BS_ratio_dialog.setEnabled(True)
+        else :
+            self.BS_ratio_dialog.setEnabled(False)
+        
+    def enable_pola_angle(self):
+        if self.optics_list.currentText() == 'Polarizer':
+            self.pola_angle_dialog.setEnabled(True)
+        else :
+            self.pola_angle_dialog.setEnabled(False)
 
 
     def clear_optics(self):
@@ -371,6 +443,18 @@ class MainWindow(QMainWindow):
 
         self.sc.draw()
     
+    def clear_table(self):
+
+        x_lim = self.sc.axes.get_xlim()
+        y_lim = self.sc.axes.get_ylim()
+        self.sc.axes.clear()
+
+        self.sc.axes.set_xlim(x_lim)
+        self.sc.axes.set_ylim(y_lim)
+        self.sc.axes.set_aspect('equal', adjustable='box')
+
+        self.sc.draw()
+
     def download(self):
         self.table.report(self.laser, self.pos_init, filename = "rapport_optique.tx")
         self.sc.fig.savefig("optical_path.jpg")

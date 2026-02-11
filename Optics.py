@@ -674,7 +674,7 @@ class TableOptique(dict):
 # rayon = Laser(633, k, stokes_vector=[1,1,0,0])
 # # rayon2 = Laser(600, k2)
 # # rayon = Laser(620, k)
-# # mirror1 = Mirror((0,1), 1)
+# mirror1 = Mirror((0,1), 1)
 # # mirror2 = Mirror((1,0.001), 1)
 # # mirror3 = Mirror((-1,159), 1)
 # # mirror4 = Mirror((150,1), 1)
@@ -682,7 +682,7 @@ class TableOptique(dict):
 # table = TableOptique((20,20))
 
 
-# # table.add(mirror1, (-5,4))
+# table.add(mirror1, (-5,4))
 # # table.add(mirror2, (-8.7,1.69))
 # # table.add(mirror4, (-3.81,-1.82))
 
