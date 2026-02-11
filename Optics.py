@@ -337,6 +337,21 @@ class TableOptique(dict):
                     #  plt.plot(xa, ya, color="black", linewidth=2, label="Axis") 
                     plt.plot(xc, yc, color="magenta", linewidth=3, alpha=0.5)
                     plt.plot(xa, ya, color="black", linewidth=2) 
+                custom_name = getattr(optics, 'name', None)
+
+                if custom_name: 
+                    label_text = custom_name
+                else:
+                    if isinstance(optics,Mirror): 
+                        label_text = "Mirror"
+                    elif isinstance(optics, BeamSplitter):
+                        label_text = "BS"
+                    elif isinstance(optics, Polarizer):
+                        label_text = f"Pol {optics.angle_deg}°"
+                print("draw_etx")
+                x_cen, y_cen = self[optics]
+                plt.text(x_cen + 1 ,y_cen + 1, label_text, color = 'black', fontsize = 9, ha = 'center', fontweight = 'bold')
+
         else:
             print('test')
             for optics in self.keys():
@@ -362,19 +377,20 @@ class TableOptique(dict):
                     ax.plot(xc, yc, color="magenta", linewidth=3, alpha=0.5)
                     ax.plot(xa, ya, color="black", linewidth=2) 
             
-            custom_name = getattr(optics, 'name', None)
+                custom_name = getattr(optics, 'name', None)
 
-            if custom_name: 
-                label_text = custom_name
-            else:
-                if isinstance(optics,Mirror): 
-                    label_text = "Mirror"
-                elif isinstance(optics, BeamSplitter):
-                    label_text = "BS"
-                elif isinstance(optics, Polarizer):
-                    label_text = f"Pol {optics.angle_deg}°"
-            x_cen, y_cen = self[optics]
-            plt.text(x_cen + 1 ,y_cen + 1, label_text, color = 'black', fontsize = 9, ha = 'center', fontweight = 'bold')
+                if custom_name: 
+                    label_text = custom_name
+                else:
+                    if isinstance(optics,Mirror): 
+                        label_text = "Mirror"
+                    elif isinstance(optics, BeamSplitter):
+                        label_text = "BS"
+                    elif isinstance(optics, Polarizer):
+                        label_text = f"Pol {optics.angle_deg}°"
+                print("draw_etx")
+                x_cen, y_cen = self[optics]
+                plt.text(x_cen + 1 ,y_cen + 1, label_text, color = 'black', fontsize = 9, ha = 'center', fontweight = 'bold')
 
         #matplotlib adjustments
         xlim, ylim = self.size

@@ -50,6 +50,6 @@ table.add(P2, (5 ,0))
 # table.add(P2, (-2.5, -2.5))
 
 table.draw()
-table.draw_laser(rayon, (0,0))
+# table.draw_laser(rayon, (0,0))
 table.report(rayon, (0,0), "test.txt")
 plt.show()

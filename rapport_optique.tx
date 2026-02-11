@@ -4,9 +4,16 @@ Source Stokes : [1 0 0 0]
 ----------------------------------------
 
 --- FAISCEAU DE SORTIE #1 ---
-Intensité Finale : 1.0000 (100.0% de l'entrée)
-Direction (k)    : (-0.000, 1.000)
-Angle            : 90.00 deg
-Vecteur Stokes   : [1.000, 0.000, 0.000, 0.000]
+Intensité Finale : 0.5000 (50.0% de l'entrée)
+Direction (k)    : (1.000, 0.000)
+Angle            : 0.00 deg
+Vecteur Stokes   : [0.500, 0.000, 0.000, 0.000]
+Type Polarisation: Non polarisée
+
+--- FAISCEAU DE SORTIE #2 ---
+Intensité Finale : 0.5000 (50.0% de l'entrée)
+Direction (k)    : (0.000, -1.000)
+Angle            : -90.00 deg
+Vecteur Stokes   : [0.500, 0.000, 0.000, 0.000]
 Type Polarisation: Non polarisée
 

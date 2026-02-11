@@ -18,7 +18,8 @@ from PyQt5.QtWidgets import (
     QLineEdit,
     QSpinBox,
     QComboBox,
-    QDoubleSpinBox
+    QDoubleSpinBox,
+    QGroupBox
 )
 
 # from layout_colorwidget import Color
@@ -27,6 +28,7 @@ class MplCanvas(FigureCanvasQTAgg):
     def __init__(self, parent=None, width=200, height=200, dpi=100):
         self.fig = Figure(figsize=(width, height), dpi=dpi)
         self.axes = self.fig.add_subplot(111)
+        self.axes.set_aspect('equal', adjustable='box')
         # self.axes.set_xlim(-3,4)
         # self.axes.set_ylim(-3,4)
 
@@ -83,61 +85,111 @@ class MainWindow(QMainWindow):
         # qbtn.setText("Validate")
         # qbtn.clicked.connect(self.set_wvl)
 
+        wvl_btn_layout = QVBoxLayout()
+        
+        lblName = QLabel("Wavelength (nm):")
         self.dialog = QDoubleSpinBox()
-        lblName = QLabel(self.dialog)
-        lblName.setText("Wavelength : ")
-        self.dialog.setAlignment(Qt.AlignTop)
+
         self.dialog.setMinimum(400)
         self.dialog.setMaximum(700)
 
-        # qbtn = QPushButton()
-        # qbtn.setText("Validate")
         self.dialog.valueChanged.connect(self.set_wvl)
 
-        first_btn_layout.addWidget(self.dialog)
+        # Add widgets
+        wvl_btn_layout.addWidget(lblName)
+        wvl_btn_layout.addWidget(self.dialog)
+
+        # 🔥 Remove all extra space
+        wvl_btn_layout.setContentsMargins(0, 0, 0, 0)
+        wvl_btn_layout.setSpacing(0)
+
+        # Align label tightly
+        lblName.setAlignment(Qt.AlignLeft | Qt.AlignBottom)
+        # self.dialog.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+        first_btn_layout.addLayout(wvl_btn_layout)
+
         # first_btn_layout.addWidget(qbtn)
 
         # get polarization
 
+        pol_button_layout = QVBoxLayout()
         self.dialog_pol = QLineEdit()
-        lblName_pol = QLabel(self.dialog_pol)
-        lblName_pol.setText("Polarization : ")
+        lblName_pol = QLabel("Polarization : ")
+        # lblName_pol.setText("Polarization : ")
 
         qbtn_pol = QPushButton()
-        qbtn_pol.setText("Validate Pol")
+        qbtn_pol.setText("Validate polarization")
         qbtn_pol.clicked.connect(self.set_polarization)
 
-        first_btn_layout.addWidget(self.dialog_pol)
-        first_btn_layout.addWidget(qbtn_pol)
+        # pol_button_layout.addWidget()
+        pol_button_layout.addWidget(lblName_pol)
+        pol_button_layout.addWidget(self.dialog_pol)
+        pol_button_layout.addWidget(qbtn_pol)
+
+        # 🔥 Remove all extra space
+        pol_button_layout.setContentsMargins(0, 0, 0, 0)
+        pol_button_layout.setSpacing(0)
+        lblName_pol.setAlignment(Qt.AlignLeft | Qt.AlignBottom)
+        first_btn_layout.addLayout(pol_button_layout)
 
         #get k vector
 
+        # self.dialog_k = QLineEdit()
+        # lblName_k = QLabel(self.dialog_k)
+        # lblName_k.setText("k-vector : ")
+        # qbtn_k = QPushButton()
+        # qbtn_k.setText("Validate")
+        # qbtn_k.clicked.connect(self.set_k_vector)
+
+        # # self.dialog_k = QDoubleSpinBox()
+        # # lblName_k = QLabel(self.)
+        # # lblName_k.setText("Wavelength : ")
+
+        # first_btn_layout.addWidget(self.dialog_k)
+        # first_btn_layout.addWidget(qbtn_k)
+
+        k_button_layout = QVBoxLayout()
         self.dialog_k = QLineEdit()
-        lblName_k = QLabel(self.dialog_k)
-        lblName_k.setText("k-vector : ")
+        lblName_k = QLabel("k vector : ")
+        # lblName_pol.setText("Polarization : ")
+
         qbtn_k = QPushButton()
-        qbtn_k.setText("Validate")
+        qbtn_k.setText("Validate polarization")
         qbtn_k.clicked.connect(self.set_k_vector)
 
-        # self.dialog_k = QDoubleSpinBox()
-        # lblName_k = QLabel(self.)
-        # lblName_k.setText("Wavelength : ")
+        # pol_button_layout.addWidget()
+        k_button_layout.addWidget(lblName_k)
+        k_button_layout.addWidget(self.dialog_k)
+        k_button_layout.addWidget(qbtn_k)
+        
+        # 🔥 Remove all extra space
+        k_button_layout.setContentsMargins(0, 0, 0, 0)
+        k_button_layout.setSpacing(0)
+        lblName_k.setAlignment(Qt.AlignLeft | Qt.AlignBottom)
+        first_btn_layout.addLayout(k_button_layout)
 
-        first_btn_layout.addWidget(self.dialog_k)
-        first_btn_layout.addWidget(qbtn_k)
 
         #get initial position
 
+        pos_layout = QVBoxLayout()
         self.dialog_pos = QLineEdit()
-        lblName_pos = QLabel(self.dialog_pos)
-        lblName_pos.setText("position_init : ")
+        lblName_pos = QLabel("position_init : ")
+        # lblName_pos.setText("position_init : ")
+
         qbtn_pos = QPushButton()
-        qbtn_pos.setText("Validate")
+        qbtn_pos.setText("Validate position")
         qbtn_pos.clicked.connect(self.set_position_init)
+        
+        pos_layout.addWidget(lblName_pos)
 
-        first_btn_layout.addWidget(self.dialog_pos)
-        first_btn_layout.addWidget(qbtn_pos)
+        pos_layout.addWidget(self.dialog_pos)
+        pos_layout.addWidget(qbtn_pos)
+        
+        pos_layout.setContentsMargins(0, 0, 0, 0)
+        pos_layout.setSpacing(0)
+        lblName_pos.setAlignment(Qt.AlignLeft | Qt.AlignBottom)
 
+        first_btn_layout.addLayout(pos_layout)
         button_layout.addLayout(first_btn_layout)
 
         #get and set optical elements
@@ -326,7 +378,7 @@ class MainWindow(QMainWindow):
 
 app = QApplication(sys.argv)
 
-window = MainWindow()
+window = MainWindow()   
 window.show()
 
 app.exec()
