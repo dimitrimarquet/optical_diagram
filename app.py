@@ -56,6 +56,8 @@ class MainWindow(QMainWindow):
 
         pagelayout.addLayout(button_layout)
         pagelayout.addLayout(self.stacklayout)
+        pagelayout.setStretch(0, 3)
+        pagelayout.setStretch(1, 7)
 
         self.table = Optics.TableOptique((20,20))
         self.laser = Optics.Laser(600, (1,1), np.array([1,0,0,0]))
@@ -79,18 +81,9 @@ class MainWindow(QMainWindow):
         zero_btn_layout.addWidget(self.dialog_tab_size)
         zero_btn_layout.addWidget(qbtn_tab_size)
 
-        button_layout.setContentsMargins(0, 0, 0, 0)
-        button_layout.setSpacing(0)
-
+        zero_btn_layout.setSpacing(0)
+        zero_btn_layout.setAlignment(Qt.AlignLeft | Qt.AlignTop)
         button_layout.addLayout(zero_btn_layout)
-
-        #get wvl
-        # self.dialog = QLineEdit()
-        # lblName = QLabel(self.dialog)
-        # lblName.setText("Wavelength : ")
-        # qbtn = QPushButton()
-        # qbtn.setText("Validate")
-        # qbtn.clicked.connect(self.set_wvl)
 
         wvl_btn_layout = QVBoxLayout()
         
@@ -113,6 +106,7 @@ class MainWindow(QMainWindow):
         # Align label tightly
         lblName.setAlignment(Qt.AlignLeft | Qt.AlignBottom)
         # self.dialog.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+        wvl_btn_layout.setAlignment(Qt.AlignTop)
         first_btn_layout.addLayout(wvl_btn_layout)
 
         # first_btn_layout.addWidget(qbtn)
@@ -137,23 +131,11 @@ class MainWindow(QMainWindow):
         pol_button_layout.setContentsMargins(0, 0, 0, 0)
         pol_button_layout.setSpacing(0)
         lblName_pol.setAlignment(Qt.AlignLeft | Qt.AlignBottom)
+        pol_button_layout.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+
         first_btn_layout.addLayout(pol_button_layout)
 
         #get k vector
-
-        # self.dialog_k = QLineEdit()
-        # lblName_k = QLabel(self.dialog_k)
-        # lblName_k.setText("k-vector : ")
-        # qbtn_k = QPushButton()
-        # qbtn_k.setText("Validate")
-        # qbtn_k.clicked.connect(self.set_k_vector)
-
-        # # self.dialog_k = QDoubleSpinBox()
-        # # lblName_k = QLabel(self.)
-        # # lblName_k.setText("Wavelength : ")
-
-        # first_btn_layout.addWidget(self.dialog_k)
-        # first_btn_layout.addWidget(qbtn_k)
 
         k_button_layout = QVBoxLayout()
         self.dialog_k = QLineEdit()
@@ -197,16 +179,20 @@ class MainWindow(QMainWindow):
         lblName_pos.setAlignment(Qt.AlignLeft | Qt.AlignBottom)
 
         first_btn_layout.addLayout(pos_layout)
-        k_button_layout.setContentsMargins(0, 0, 0, 0)
-        k_button_layout.setSpacing(0)
 
-        button_layout.addLayout(first_btn_layout)
+        self.pol = False
+        self.k = False
+        self.pos = False
+        # k_button_layout.setContentsMargins(0, 0, 0, 0)
+        # k_button_layout.setSpacing(0)
+
+        # first_btn_layout.setContentsMargins(0, 0, 0, 0)
+        
+        first_btn_layout.setSpacing(5)
+
 
         #get and set optical elements
 
-        self.list_widget = QListWidget()
-        # self.list_widget.resize(100,100)
-        button_layout.addWidget(self.list_widget)
 
         self.optics_list = QComboBox()
         self.optics_list.addItems(['Mirror', 'Beam splitter', 'Polarizer'])
@@ -269,14 +255,17 @@ class MainWindow(QMainWindow):
         self.optics_list.currentTextChanged.connect(self.enable_pola_angle)
 
         #add
-        btn_add_optics = QPushButton("Add")
-        btn_add_optics.pressed.connect(self.add_optics)
+        self.btn_add_optics = QPushButton("Add")
+        self.btn_add_optics.pressed.connect(self.add_optics)
 
-        btn_rem_optics = QPushButton("Remove")
-        btn_rem_optics.pressed.connect(self.remove_optics)
+        self.btn_rem_optics = QPushButton("Remove")
+        self.btn_rem_optics.pressed.connect(self.remove_optics)
 
-        btn_clear_optics = QPushButton("Clear")
-        btn_clear_optics.pressed.connect(self.clear_optics)
+        self.btn_clear_optics = QPushButton("Clear")
+        self.btn_clear_optics.pressed.connect(self.clear_optics)
+        self.btn_rem_optics.setEnabled(False)
+        self.btn_clear_optics.setEnabled(False)
+
         
         second_btn_layout.addWidget(self.optics_list)
         second_btn_layout.addLayout(optics_pos)
@@ -285,25 +274,35 @@ class MainWindow(QMainWindow):
         second_btn_layout.addLayout(pola_angle_layout)
 
  
-        second_btn_layout.addWidget(btn_add_optics)
-        second_btn_layout.addWidget(btn_rem_optics)
+        second_btn_layout.addWidget(self.btn_add_optics)
 
-        second_btn_layout.addWidget(btn_clear_optics)
+        second_btn_layout.addWidget(self.btn_rem_optics)
+
+
+        second_btn_layout.addWidget(self.btn_clear_optics)
 
         button_layout.addLayout(second_btn_layout)
+
+        self.list_widget = QListWidget()
+        # self.list_widget.resize(100,100)
+        button_layout.addWidget(self.list_widget)
+
+        button_layout.addLayout(first_btn_layout)
 
 
         widget = QWidget()
         widget.setLayout(pagelayout)
         self.setCentralWidget(widget)
 
-        btn_draw_optics = QPushButton("Draw Table")
-        btn_draw_optics.pressed.connect(self.draw_table)
-        third_btn_layout.addWidget(btn_draw_optics)
+        self.btn_draw_optics = QPushButton("Draw Table")
+        self.btn_draw_optics.pressed.connect(self.draw_table)
+        third_btn_layout.addWidget(self.btn_draw_optics)
+        self.btn_draw_optics.setEnabled(False)
 
-        btn_draw_laser = QPushButton("Draw Laser")
-        btn_draw_laser.pressed.connect(self.draw_laser)
-        third_btn_layout.addWidget(btn_draw_laser)
+        self.btn_draw_laser = QPushButton("Draw Laser")
+        self.btn_draw_laser.pressed.connect(self.draw_laser)
+        third_btn_layout.addWidget(self.btn_draw_laser)
+        self.btn_draw_laser.setEnabled(False)
 
         btn_clear_table = QPushButton("Clear Table")
         btn_clear_table.pressed.connect(self.clear_table)
@@ -345,6 +344,7 @@ class MainWindow(QMainWindow):
             self.sc.axes.set_aspect('equal', adjustable='box')
 
             self.sc.draw()
+        self.btn_draw_optics.setEnabled(True)
 
 
     def set_wvl(self, i):
@@ -354,18 +354,30 @@ class MainWindow(QMainWindow):
     def set_polarization(self):
         text = self.dialog_pol.text()
         pol_array = np.array([float(text.split()[0]), float(text.split()[1]), float(text.split()[2]), float(text.split()[3])])
-        self.laser.stokes_vector = pol_array
+        print(pol_array)
+        self.laser.stokes = pol_array
+        self.pol = True
+        if self.k and self.pos and self.pol :
+            self.btn_draw_laser.setEnabled(True)
+
 
 
     def set_k_vector(self):
         text = self.dialog_k.text()
         tuple = (float(text.split()[0]), float(text.split()[1]))
         self.laser.k_vector = tuple
+        self.k = True
+        if self.k and self.pos and self.pol :
+            self.btn_draw_laser.setEnabled(True)
 
     def set_position_init(self):
         text = self.dialog_pos.text()
         tuple = (float(text.split()[0]), float(text.split()[1]))
         self.pos_init = tuple
+        self.pos = True
+        if self.k and self.pos and self.pol :
+            self.btn_draw_laser.setEnabled(True)
+
 
     # def set_k_vector(self, k_vector):
 
@@ -382,20 +394,37 @@ class MainWindow(QMainWindow):
             self.mirror_index += 1
 
         elif self.optics_list.currentText() == 'Beam splitter':
-            self.table.add(Optics.BeamSplitter(orient_optics, 0.5, name = 'BS' + str(self.BS_index)), pos_optics)
+            text_ratio = self.BS_ratio_dialog.text()
+            ratio = float(text_ratio)
+
+            self.table.add(Optics.BeamSplitter(orient_optics, ratio, name = 'BS' + str(self.BS_index)), pos_optics)
             self.list_widget.addItem(self.optics_list.currentText() + str(self.BS_index))
             self.BS_index += 1
 
         elif self.optics_list.currentText() == 'Polarizer':
-            self.table.add(Optics.Polarizer(orient_optics, 1, name = 'Pol' + str(self.polarizer_index)), pos_optics)
+            text_angle = self.pola_angle_dialog.text()
+            angle = float(text_angle)
+            self.table.add(Optics.Polarizer(orient_optics, angle, name = 'Pol' + str(self.polarizer_index)), pos_optics)
             self.list_widget.addItem(self.optics_list.currentText() + str(self.polarizer_index))
             self.polarizer_index += 1
+        
+        self.btn_rem_optics.setEnabled(True)
+        self.btn_clear_optics.setEnabled(True)
+
 
 
     def remove_optics(self):
         self.table.popitem()
         row = len(self.list_widget)
         self.list_widget.takeItem(row-1)
+        if len(self.table) == 0:
+            self.btn_rem_optics.setEnabled(False)
+            self.btn_clear_optics.setEnabled(False)
+
+        else:
+            self.btn_rem_optics.setEnabled(True)
+            self.btn_clear_optics.setEnabled(True)
+
 
     def enable_BS(self):
         print("ye")
@@ -416,6 +445,10 @@ class MainWindow(QMainWindow):
     def clear_optics(self):
         self.list_widget.clear()
         self.table.clear()
+        self.btn_rem_optics.setEnabled(False)
+        self.btn_clear_optics.setEnabled(False)
+
+
 
     def draw_table(self):
         x_lim = self.sc.axes.get_xlim()
@@ -456,7 +489,7 @@ class MainWindow(QMainWindow):
         self.sc.draw()
 
     def download(self):
-        self.table.report(self.laser, self.pos_init, filename = "rapport_optique.tx")
+        self.table.report(self.laser, self.pos_init, filename = "rapport_optique.txt")
         self.sc.fig.savefig("optical_path.jpg")
 
 

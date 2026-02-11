@@ -1,0 +1,6 @@
+===RAPPORT DE SIMULATION OPTIQUE ===
+Source Lambda : 600 nm
+Source Stokes : [1. 1. 0. 0.]
+----------------------------------------
+
+Aucune faisceau n'est sorti de la table
