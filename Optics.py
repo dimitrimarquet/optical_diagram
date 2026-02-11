@@ -39,7 +39,7 @@ class Mirror(Instruments):
         reflectivity (float): Coefficient de réflectivité du miroir (0 à 1).
     """
 
-    def __init__(self, orientation_vector, reflectivity, name = 'Mirror'):
+    def __init__(self, orientation_vector, reflectivity, name = None):
         super().__init__(name)
         self.orientation = orientation_vector
         self.reflectivity = reflectivity
@@ -121,9 +121,10 @@ class BeamSplitter(Instruments):
         ratio (float): Ratio de transmission/réflexion de 0.5 pour un BS 50:50).
     """
 
-    def __init__(self, orientation_vector, ratio=0.5):
+    def __init__(self, orientation_vector, ratio=0.5, name = None):
         self.orientation = orientation_vector
         self.ratio = ratio  # 0.5 signifie 50% transmis, 50% réfléchis
+        super().__init__(name)
 
     def reflect(self, rayon):
         """
@@ -211,10 +212,11 @@ class BeamSplitter(Instruments):
 
 class Polarizer(Instruments): 
 
-    def __init__(self, orientation_vector , angle_deg):
+    def __init__(self, orientation_vector , angle_deg, name = None):
         self.orientation = orientation_vector
         self.angle_deg = angle_deg 
         self.angle_rad = np.radians(angle_deg)
+        super().__init__(name)
 
         theta = self.angle_rad
         c2 = np.cos(2*theta) 
@@ -350,7 +352,7 @@ class TableOptique(dict):
                         label_text = f"Pol {optics.angle_deg}°"
                 print("draw_etx")
                 x_cen, y_cen = self[optics]
-                plt.text(x_cen + 1 ,y_cen + 1, label_text, color = 'black', fontsize = 9, ha = 'center', fontweight = 'bold')
+                ax.text(x_cen + 1 ,y_cen + 1, label_text, color = 'black', fontsize = 9, ha = 'center', fontweight = 'bold')
 
         else:
             print('test')
@@ -390,7 +392,7 @@ class TableOptique(dict):
                         label_text = f"Pol {optics.angle_deg}°"
                 print("draw_etx")
                 x_cen, y_cen = self[optics]
-                plt.text(x_cen + 1 ,y_cen + 1, label_text, color = 'black', fontsize = 9, ha = 'center', fontweight = 'bold')
+                ax.text(x_cen + 1 ,y_cen + 1, label_text, color = 'black', fontsize = 9, ha = 'center', fontweight = 'bold')
 
         #matplotlib adjustments
         xlim, ylim = self.size

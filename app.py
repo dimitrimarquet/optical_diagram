@@ -106,7 +106,7 @@ class MainWindow(QMainWindow):
         wvl_btn_layout.addWidget(lblName)
         wvl_btn_layout.addWidget(self.dialog)
 
-        # 🔥 Remove all extra space
+        # Remove all extra space
         wvl_btn_layout.setContentsMargins(0, 0, 0, 0)
         wvl_btn_layout.setSpacing(0)
 
@@ -133,7 +133,7 @@ class MainWindow(QMainWindow):
         pol_button_layout.addWidget(self.dialog_pol)
         pol_button_layout.addWidget(qbtn_pol)
 
-        # 🔥 Remove all extra space
+        # Remove all extra space
         pol_button_layout.setContentsMargins(0, 0, 0, 0)
         pol_button_layout.setSpacing(0)
         lblName_pol.setAlignment(Qt.AlignLeft | Qt.AlignBottom)
@@ -169,7 +169,7 @@ class MainWindow(QMainWindow):
         k_button_layout.addWidget(self.dialog_k)
         k_button_layout.addWidget(qbtn_k)
         
-        # 🔥 Remove all extra space
+        # Remove all extra space
         k_button_layout.setContentsMargins(0, 0, 0, 0)
         k_button_layout.setSpacing(0)
         lblName_k.setAlignment(Qt.AlignLeft | Qt.AlignBottom)
@@ -382,12 +382,12 @@ class MainWindow(QMainWindow):
             self.mirror_index += 1
 
         elif self.optics_list.currentText() == 'Beam splitter':
-            self.table.add(Optics.BeamSplitter(orient_optics, 0.5), pos_optics)
+            self.table.add(Optics.BeamSplitter(orient_optics, 0.5, name = 'BS' + str(self.BS_index)), pos_optics)
             self.list_widget.addItem(self.optics_list.currentText() + str(self.BS_index))
             self.BS_index += 1
 
         elif self.optics_list.currentText() == 'Polarizer':
-            self.table.add(Optics.Polarizer(orient_optics, 1), pos_optics)
+            self.table.add(Optics.Polarizer(orient_optics, 1, name = 'Pol' + str(self.polarizer_index)), pos_optics)
             self.list_widget.addItem(self.optics_list.currentText() + str(self.polarizer_index))
             self.polarizer_index += 1
 
