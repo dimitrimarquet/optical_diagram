@@ -248,23 +248,9 @@ class Polarizer(Instruments):
         return None 
     
     def display(self,position, length = 2):
-        x_position, y_position = position
+        #x_position, y_position = position
         mx,my = self.orientation
-
-        # dx = 0 
-        # dy = length / 2
-        
-        # x_cadre = np.array([x_c, x_c])
-        # y_cadre = np.array([y_c - dy, y_c + dy])
-        
-        # len_axis = length / 3
-        # dx_a = (len_axis/2) * np.cos(self.angle_rad + np.pi/2) # +pi/2 car 0° = horizontal optique mais vertical sur le plot
-        # dy_a = (len_axis/2) * np.sin(self.angle_rad + np.pi/2)
-        
-        # x_axis = np.array([x_c - dx_a, x_c + dx_a])
-        # y_axis = np.array([y_c - dy_a, y_c + dy_a])
-        
-        # return [(x_axis, y_axis), (x_cadre, y_cadre)]
+        x_c, y_c = position
 
         #calculation of theta, angle of inclination of the mirror with respect to x
         if mx != 0:
@@ -273,16 +259,49 @@ class Polarizer(Instruments):
             theta = 0
         
         #calculation of arrays (x_array, y_array) representing the mirror in (x,y) plane as a segment
-        x_max = x_position + np.cos(theta)*length/2
-        x_min = x_position - np.cos(theta)*length/2
+        # x_max = x_position + np.cos(theta)*length/2
+        # x_min = x_position - np.cos(theta)*length/2
 
-        y_max = y_position + np.sin(theta)*length/2
-        y_min = y_position - np.sin(theta)*length/2
+        # y_max = y_position + np.sin(theta)*length/2
+        # y_min = y_position - np.sin(theta)*length/2
 
-        x_array = np.linspace(x_min, x_max, 10)
-        y_array = np.linspace(y_min, y_max, 10)
+        # x_array = np.linspace(x_min, x_max, 10)
+        # y_array = np.linspace(y_min, y_max, 10)
 
-        return [(x_array, y_array), (x_array, y_array)]
+        dx = np.cos(theta) * length / 2
+        dy = np.sin(theta) * length / 2
+
+        x_max, y_max = x_c + dx, y_c + dy
+        x_min, y_min = x_c - dx, y_c - dy
+        
+        # Tableaux pour le corps (magenta)
+        x_body = np.linspace(x_min, x_max, 10)
+        y_body = np.linspace(y_min, y_max, 10)
+
+        # Calcul des flèches (Décoration visuelle)
+        arrow_len = length * 0.2
+        # Angle d'ouverture des flèches (30 degrés = pi/6)
+        alpha = np.pi / 6
+        
+        xa1 = x_max - arrow_len * np.cos(theta - alpha)
+        ya1 = y_max - arrow_len * np.sin(theta - alpha)
+        # Aile droite
+        xa2 = x_max - arrow_len * np.cos(theta + alpha)
+        ya2 = y_max - arrow_len * np.sin(theta + alpha)
+
+        # --- Flèche du Bas (au point Min) ---
+        xb1 = x_min + arrow_len * np.cos(theta - alpha)
+        yb1 = y_min + arrow_len * np.sin(theta - alpha)
+        # Aile droite
+        xb2 = x_min + arrow_len * np.cos(theta + alpha)
+        yb2 = y_min + arrow_len * np.sin(theta + alpha)
+
+        #Construction du tableau des flèches avec des "coupures" (np.nan)
+        x_arrows = np.array([xa1, x_max, xa2, np.nan, xb1, x_min, xb2])
+        y_arrows = np.array([ya1, y_max, ya2, np.nan, yb1, y_min, yb2])
+
+        return [(x_body, y_body), (x_arrows, y_arrows)]
+        #return [(x_array, y_array), (x_array, y_array)]
 
 class TableOptique(dict):
     """
