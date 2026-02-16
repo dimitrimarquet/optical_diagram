@@ -5,6 +5,7 @@ from matplotlib.figure import Figure
 import numpy as np
 from PyQt5.QtCore import Qt
 
+
 from PyQt5.QtWidgets import (
     QApplication,
     QHBoxLayout,
@@ -22,6 +23,13 @@ from PyQt5.QtWidgets import (
     QGroupBox
 )
 
+def is_number(n):
+    try:
+        float(n)
+        return True
+    except ValueError:
+        return False
+    
 # from layout_colorwidget import Color
 class MplCanvas(FigureCanvasQTAgg):
 
@@ -115,17 +123,18 @@ class MainWindow(QMainWindow):
 
         pol_button_layout = QVBoxLayout()
         self.dialog_pol = QLineEdit()
-        lblName_pol = QLabel("Polarization : ")
+        self.dialog_pol.textEdited.connect(self.enable_validate)
+        lblName_pol = QLabel("Polarization (Stokes vector) : ")
         # lblName_pol.setText("Polarization : ")
 
-        qbtn_pol = QPushButton()
-        qbtn_pol.setText("Validate polarization")
-        qbtn_pol.clicked.connect(self.set_polarization)
+        self.qbtn_pol = QPushButton()
+        self.qbtn_pol.setText("Validate polarization")
+        self.qbtn_pol.clicked.connect(self.set_polarization)
 
         # pol_button_layout.addWidget()
         pol_button_layout.addWidget(lblName_pol)
         pol_button_layout.addWidget(self.dialog_pol)
-        pol_button_layout.addWidget(qbtn_pol)
+        pol_button_layout.addWidget(self.qbtn_pol)
 
         # Remove all extra space
         pol_button_layout.setContentsMargins(0, 0, 0, 0)
@@ -139,17 +148,19 @@ class MainWindow(QMainWindow):
 
         k_button_layout = QVBoxLayout()
         self.dialog_k = QLineEdit()
-        lblName_k = QLabel("k vector : ")
+        self.dialog_k.textEdited.connect(self.enable_validate)
+
+        lblName_k = QLabel("k vector (kx, ky) : ")
         # lblName_pol.setText("Polarization : ")
 
-        qbtn_k = QPushButton()
-        qbtn_k.setText("Validate k vector")
-        qbtn_k.clicked.connect(self.set_k_vector)
+        self.qbtn_k = QPushButton()
+        self.qbtn_k.setText("Validate k vector")
+        self.qbtn_k.clicked.connect(self.set_k_vector)
 
         # pol_button_layout.addWidget()
         k_button_layout.addWidget(lblName_k)
         k_button_layout.addWidget(self.dialog_k)
-        k_button_layout.addWidget(qbtn_k)
+        k_button_layout.addWidget(self.qbtn_k)
         
         # Remove all extra space
         k_button_layout.setContentsMargins(0, 0, 0, 0)
@@ -162,17 +173,19 @@ class MainWindow(QMainWindow):
 
         pos_layout = QVBoxLayout()
         self.dialog_pos = QLineEdit()
-        lblName_pos = QLabel("Initial position : ")
+        self.dialog_pos.textEdited.connect(self.enable_validate)
+
+        lblName_pos = QLabel("Initial position (x, y) : ")
         # lblName_pos.setText("position_init : ")
 
-        qbtn_pos = QPushButton()
-        qbtn_pos.setText("Validate position")
-        qbtn_pos.clicked.connect(self.set_position_init)
+        self.qbtn_pos = QPushButton()
+        self.qbtn_pos.setText("Validate position")
+        self.qbtn_pos.clicked.connect(self.set_position_init)
         
         pos_layout.addWidget(lblName_pos)
 
         pos_layout.addWidget(self.dialog_pos)
-        pos_layout.addWidget(qbtn_pos)
+        pos_layout.addWidget(self.qbtn_pos)
         
         pos_layout.setContentsMargins(0, 0, 0, 0)
         pos_layout.setSpacing(0)
@@ -183,6 +196,11 @@ class MainWindow(QMainWindow):
         self.pol = False
         self.k = False
         self.pos = False
+
+        self.qbtn_k.setEnabled(False)
+        self.qbtn_pol.setEnabled(False)
+        self.qbtn_pos.setEnabled(False)
+
         # k_button_layout.setContentsMargins(0, 0, 0, 0)
         # k_button_layout.setSpacing(0)
 
@@ -193,14 +211,17 @@ class MainWindow(QMainWindow):
 
         #get and set optical elements
 
+        self.optics_pos = False
+        self.optics_orient = False
 
         self.optics_list = QComboBox()
         self.optics_list.addItems(['Mirror', 'Beam splitter', 'Polarizer'])
-        
+        self.optics_list.currentTextChanged.connect(self.enable_add)
         #position
         optics_pos = QVBoxLayout()
         self.dialog_pos_optics = QLineEdit()
-        lblName_pos_optics = QLabel("Position optics")
+        self.dialog_pos_optics.textEdited.connect(self.enable_add)
+        lblName_pos_optics = QLabel("Position (x, y)")
         lblName_pos_optics.setAlignment(Qt.AlignLeft | Qt.AlignBottom)
         optics_pos.setContentsMargins(0, 0, 0, 0)
         optics_pos.setSpacing(0)
@@ -213,7 +234,8 @@ class MainWindow(QMainWindow):
         orient_layout = QVBoxLayout()
 
         self.dialog_orient_optics = QLineEdit()
-        lblName_orient_optics = QLabel("Orientation")
+        self.dialog_orient_optics.textChanged.connect(self.enable_add)
+        lblName_orient_optics = QLabel("Orientation of the normal vector (mx, my)")
         # lblName_orient_optics.setText("Orientation")
         lblName_orient_optics.setAlignment(Qt.AlignLeft | Qt.AlignBottom)
         orient_layout.setContentsMargins(0, 0, 0, 0)
@@ -226,7 +248,8 @@ class MainWindow(QMainWindow):
         BS_ratio_layout = QVBoxLayout()
 
         self.BS_ratio_dialog = QLineEdit()
-        lblName_BS_ratio = QLabel("BS ratio")
+        self.BS_ratio_dialog.textChanged.connect(self.enable_add)
+        lblName_BS_ratio = QLabel("Beam splitter transmission ratio (between 0 and 1)")
         # lblName_orient_optics.setText("Orientation")
         lblName_BS_ratio.setAlignment(Qt.AlignLeft | Qt.AlignBottom)
         BS_ratio_layout.setContentsMargins(0, 0, 0, 0)
@@ -242,7 +265,8 @@ class MainWindow(QMainWindow):
         pola_angle_layout = QVBoxLayout()
 
         self.pola_angle_dialog = QLineEdit()
-        lblName_pola_angle = QLabel("pola_angle")
+        self.pola_angle_dialog.textChanged.connect(self.enable_add)
+        lblName_pola_angle = QLabel("Polarizer angle with respect to horizontal (°)")
         # lblName_orient_optics.setText("Orientation")
         lblName_pola_angle.setAlignment(Qt.AlignLeft | Qt.AlignBottom)
         pola_angle_layout.setContentsMargins(0, 0, 0, 0)
@@ -255,7 +279,10 @@ class MainWindow(QMainWindow):
         self.optics_list.currentTextChanged.connect(self.enable_pola_angle)
 
         #add
+
         self.btn_add_optics = QPushButton("Add")
+
+        self.btn_add_optics.setEnabled(False)
         self.btn_add_optics.pressed.connect(self.add_optics)
 
         self.btn_rem_optics = QPushButton("Remove")
@@ -411,7 +438,59 @@ class MainWindow(QMainWindow):
         self.btn_rem_optics.setEnabled(True)
         self.btn_clear_optics.setEnabled(True)
 
+    def enable_add(self):
+        txt_orient = self.dialog_orient_optics.text()
+        txt_pos = self.dialog_pos_optics.text()
 
+        length_test_orient = len(txt_orient.split()) == 2
+        length_test_pos = len(txt_pos.split()) == 2
+
+        if length_test_orient and length_test_pos:
+            type_test_orient = is_number(txt_orient.split()[0]) and is_number(txt_orient.split()[1])
+            type_test_pos = is_number(txt_pos.split()[0]) and is_number(txt_pos.split()[1])
+
+            if type_test_orient and type_test_pos:
+
+                if self.optics_list.currentText() == 'Mirror':
+                    self.btn_add_optics.setEnabled(True)
+                    return None
+
+                if self.optics_list.currentText() == 'Beam splitter':
+                    text_ratio = self.BS_ratio_dialog.text()
+                    print('test')
+                    if is_number(text_ratio) and 0 <= float(text_ratio) <= 1:
+                        self.btn_add_optics.setEnabled(True)
+                        return None
+
+                elif self.optics_list.currentText() == 'Polarizer':
+                    text_angle = self.pola_angle_dialog.text()
+                    if is_number(text_angle) and 0 <= float(text_angle) <= 360 :
+                        self.btn_add_optics.setEnabled(True)
+                        return None
+
+        self.btn_add_optics.setEnabled(False)
+    
+    def enable_validate(self):
+        text_pol = self.dialog_pol.text()
+        text_pos_init = self.dialog_pos.text()
+        text_k = self.dialog_k.text()
+        if len(text_pol.split()) == 4 and is_number(text_pol.split()[0]) and is_number(text_pol.split()[1]) and is_number(text_pol.split()[2]) and is_number(text_pol.split()[3]):
+            self.qbtn_pol.setEnabled(True)
+        else :
+            self.qbtn_pol.setEnabled(False)
+        if len(text_pos_init.split()) == 2 and is_number(text_pos_init.split()[0]) and is_number(text_pos_init.split()[1]) :
+            self.qbtn_pos.setEnabled(True)
+        else :
+            self.qbtn_pos.setEnabled(False)
+
+        if len(text_k.split()) == 2 and is_number(text_k.split()[0]) and is_number(text_k.split()[1]) :
+            self.qbtn_k.setEnabled(True)
+        else :
+            self.qbtn_k.setEnabled(False)
+
+        
+        # if self.dialog_pos
+        # if self.dialog_k
 
     def remove_optics(self):
         self.table.popitem()
