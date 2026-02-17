@@ -1,4 +1,3 @@
-#from msilib.schema import InstallUISequence
 import numpy as np
 import matplotlib.pyplot as plt
 from test_wvl import wavelength_to_rgb
@@ -73,8 +72,6 @@ class Mirror(Instruments):
         stokes_in = rayon.stokes.copy()
 
         stokes_out = stokes_in * self.reflectivity
-        #print('mirror', stokes_in)
-        #print('mirror', stokes_out)
         return Laser(wvl, k_out, stokes_vector=stokes_out)
    
     def display(self, position, length = 2):
@@ -157,9 +154,8 @@ class BeamSplitter(Instruments):
         Gère la partie TRANSMISE du faisceau.
         Dans un modèle simple (lame mince), le vecteur k ne change pas de direction.
         """
-
+        
         new_stokes = np.array(rayon.stokes.copy())*self.ratio
-        ###print("new_stokes", new_stokes)
         # Le faisceau continue tout droit : même vecteur k, même longueur d'onde
         return Laser(rayon.wavelength, rayon.k_vector, stokes_vector=new_stokes)
    
@@ -178,7 +174,7 @@ class BeamSplitter(Instruments):
         else:
             theta = 0
 
-        # 2. Calcul des vecteurs
+        # Calcul des vecteurs
         # Rayon du cercle qui englobe le carré (demi-longueur de la diagonale)
         r = length / 2
         
@@ -186,7 +182,7 @@ class BeamSplitter(Instruments):
         dx = r * np.cos(theta)
         dy = r * np.sin(theta)
 
-        # 3. Calcul des 4 coins du carré
+        # Calcul des 4 coins du carré
         # Coin 1 et 2 : Les extrémités du miroir (Diagonale active)
         p1 = (xc - dx, yc - dy)
         p2 = (xc + dx, yc + dy)
@@ -196,7 +192,7 @@ class BeamSplitter(Instruments):
         p3 = (xc - dy, yc + dx)
         p4 = (xc + dy, yc - dx)
 
-        # 4. Construction des tracés
+        # Construction des tracés
         
         # SEGMENT A (Bleu) : La diagonale active (de P1 à P2)
         x_diag = np.array([p1[0], p2[0]])
@@ -234,21 +230,12 @@ class Polarizer(Instruments):
     def transmit(self,laser):
         stokes_in = laser.stokes 
         stokes_out = np.dot(self.polarizer_matrix, stokes_in)
-        # --- DEBUG : AFFICHER LE VECTEUR DE STOKES ---
-        ###print(f"\n--- PASSAGE POLARISEUR ({self.angle_deg}°) ---")
-        # np.round permet d'arrondir pour éviter les 0.000000001
-        ###print(f"Stokes Entrée : {np.round(stokes_in, 3)}") 
-        ###print(f"Stokes Sortie : {np.round(stokes_out, 3)}")
-        ###print(f"Intensité transmise : {stokes_out[0]:.2f}")
-        ###print("-----------------------------------------")
-        # ---------------------------------------------
         return Laser(laser.wavelength, laser.k_vector, stokes_out)
     
     def reflect(self, laser):
         return None 
     
     def display(self,position, length = 2):
-        #x_position, y_position = position
         mx,my = self.orientation
         x_c, y_c = position
 
@@ -257,16 +244,6 @@ class Polarizer(Instruments):
             theta = - np.pi/2 + np.arctan(my/mx)
         else :
             theta = 0
-        
-        #calculation of arrays (x_array, y_array) representing the mirror in (x,y) plane as a segment
-        # x_max = x_position + np.cos(theta)*length/2
-        # x_min = x_position - np.cos(theta)*length/2
-
-        # y_max = y_position + np.sin(theta)*length/2
-        # y_min = y_position - np.sin(theta)*length/2
-
-        # x_array = np.linspace(x_min, x_max, 10)
-        # y_array = np.linspace(y_min, y_max, 10)
 
         dx = np.cos(theta) * length / 2
         dy = np.sin(theta) * length / 2
@@ -301,7 +278,6 @@ class Polarizer(Instruments):
         y_arrows = np.array([ya1, y_max, ya2, np.nan, yb1, y_min, yb2])
 
         return [(x_body, y_body), (x_arrows, y_arrows)]
-        #return [(x_array, y_array), (x_array, y_array)]
 
 class TableOptique(dict):
     """
@@ -354,8 +330,6 @@ class TableOptique(dict):
                     xc, yc = list_of_segments[0]
                     xa, ya = list_of_segments[1]
 
-                    #  plt.plot(xc, yc, color="magenta", linewidth=3, alpha=0.5, label="Polarizer Body")
-                    #  plt.plot(xa, ya, color="black", linewidth=2, label="Axis") 
                     plt.plot(xc, yc, color="magenta", linewidth=3, alpha=0.5)
                     plt.plot(xa, ya, color="black", linewidth=2) 
                 custom_name = getattr(optics, 'name', None)
@@ -393,8 +367,6 @@ class TableOptique(dict):
                     xc, yc = list_of_segments[0]
                     xa, ya = list_of_segments[1]
 
-                    #  plt.plot(xc, yc, color="magenta", linewidth=3, alpha=0.5, label="Polarizer Body")
-                    #  plt.plot(xa, ya, color="black", linewidth=2, label="Axis") 
                     ax.plot(xc, yc, color="magenta", linewidth=3, alpha=0.5)
                     ax.plot(xa, ya, color="black", linewidth=2) 
             
@@ -418,7 +390,6 @@ class TableOptique(dict):
         plt.xlim(-xlim/2, xlim/2)
         plt.ylim(-ylim/2, ylim/2)
         plt.gca().set_aspect('equal', adjustable='box')
-        #plt.grid(True, linestyler = '--', alpha = 0.5)
     
     def path_laser(self, laser, position_init, segments=None, outputs = None):
         """
@@ -457,7 +428,6 @@ class TableOptique(dict):
             if ray.stokes[0] < 0.01:
                 return segments
 
-            ###print('INTENSITY', i, ray.intensity)
             for optics in self.keys():
 
                 if len(used_optics) > 0 and optics == used_optics[-1]:
@@ -542,7 +512,6 @@ class TableOptique(dict):
                         y_array.append(y_intersect)
 
                         if isinstance(optics, Mirror): 
-                            ###print('testjpp', ray.intensity)
                             x_init, y_init = x_intersect, y_intersect
                             ray = optics.reflect(ray)
 
@@ -557,25 +526,12 @@ class TableOptique(dict):
                             ray = optics.reflect(ray)                            
 
                         elif isinstance(optics, Polarizer):
-                            ##print('test_pol')
                             current_intensity_pol = ray.intensity
                             segments.append((list(x_array),list(y_array),current_intensity_pol))
                             ray = optics.transmit(ray)
 
                             if ray.stokes[0] < 0.01:                                
                                 return segments
-                            # else : 
-                            #     epsilon = 0.1 
-                            #     kx, ky = ray.k_vector 
-                            #     norm_k = np.sqrt(kx**2 + ky**2)
-                            #     # x_init = x_intersect + (kx/norm_k) * epsilon
-                            #     # y_init = y_intersect + (ky/norm_k) * epsilon
-
-                            #     # x_array = [x_init]
-                            #     # y_array = [y_init]
-
-                            #     used_optics.append(optics)
-                        
                         intensity_array.append(ray.intensity)
                         used_optics.append(optics)
                     
@@ -587,7 +543,6 @@ class TableOptique(dict):
 
                 else : #if the mirror is along y
                     used_optics.append(optics)
-                    ###print("not implemented yet...")
                         
             else:
                 x_array.append(x_array[-1] + d_pos*kx_init)
@@ -597,8 +552,6 @@ class TableOptique(dict):
                 if outputs is not None: 
                     outputs.append(ray)
                     print('test output')
-                # running = False
-
             i += 1
             
         segments.append((x_array, y_array, ray.intensity))  
@@ -684,72 +637,3 @@ class TableOptique(dict):
                 f.write("\n")
                     
         print(f"Rapport généré : {filename}")
-
-
-
-
-# k = (1,0)
-# # k = (2.1,1)
-# # k2 = (-2.1, -1)
-
-# rayon = Laser(633, k, stokes_vector=[1,1,0,0])
-# # rayon2 = Laser(600, k2)
-# # rayon = Laser(620, k)
-# mirror1 = Mirror((0,1), 1)
-# # mirror2 = Mirror((1,0.001), 1)
-# # mirror3 = Mirror((-1,159), 1)
-# # mirror4 = Mirror((150,1), 1)
-
-# table = TableOptique((20,20))
-
-
-# table.add(mirror1, (-5,4))
-# # table.add(mirror2, (-8.7,1.69))
-# # table.add(mirror4, (-3.81,-1.82))
-
-# #test_cavity
-
-# mirror1 = Mirror((1,2), 1)
-# mirror2 = Mirror((5,1), 1)
-# mirror3 = Mirror((1,1), 1)
-# mirror4 = Mirror((1,10), 1)
-# mirror5 = Mirror((1,0.01), 1)
-# mirror6 = Mirror((-0.1,1), 1)
-
-# BS1 = BeamSplitter((1,1.1),ratio=0.3)
-# P2 = Polarizer((0.1,1),90) 
-# P4 = Polarizer((1,0.01),-45) 
-
-# P3 = Mirror((0.25,1),1) 
-
-# # laser_out = P2.transmit(rayon)
-# # ###print(f"Intensité après Polariseur 90° : {laser_out.intensity:.5f}")
-
-# table.add(mirror1, (7,0))
-# table.add(mirror2, (1.8,-6.5))
-# table.add(mirror4, (8.55,-2.2))
-# table.add(mirror5, (5,0))
-# table.add(mirror6, (1,6))
-
-# table.add(BS1,(1,0.1))
-# table.add(P2,(1.5,-5))
-# table.add(P3,(1.7,-8))
-# table.add(P4,(5.79, -4.79))
-
-# # mirror1 = Mirror((1,2), 1)
-# # mirror3 = Mirror((1,2), 1)
-
-# # mirror2 = Mirror((1,-1), 1)
-# # mirror4 = Mirror((50,0.1), 1)
-# # table.add(mirror1, (7,0))
-# # table.add(mirror3, (7.5,0.5))
-# # table.add(mirror2, (4.82,3))
-# # table.add(mirror4, (8.93,-2.58))
-
-
-# table.draw()
-# table.draw_laser(rayon, (0,0))
-
-
-
-# plt.show()
