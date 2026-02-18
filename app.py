@@ -77,7 +77,7 @@ class MainWindow(QMainWindow):
         self.stacklayout.addWidget(self.sc)
 
         self.dialog_tab_size = QLineEdit()
-        lblName_tab_size = QLabel("Table size")
+        lblName_tab_size = QLabel("Table size (width, height)")
         # lblName_tab_size.setText("Size table : ")
         qbtn_tab_size = QPushButton()
         qbtn_tab_size.setText("Validate table size")
@@ -249,7 +249,7 @@ class MainWindow(QMainWindow):
 
         self.BS_ratio_dialog = QLineEdit()
         self.BS_ratio_dialog.textChanged.connect(self.enable_add)
-        lblName_BS_ratio = QLabel("Beam splitter transmission ratio (between 0 and 1)")
+        lblName_BS_ratio = QLabel("Beam splitter transmission intensity rate (between 0 and 1)")
         # lblName_orient_optics.setText("Orientation")
         lblName_BS_ratio.setAlignment(Qt.AlignLeft | Qt.AlignBottom)
         BS_ratio_layout.setContentsMargins(0, 0, 0, 0)
@@ -572,9 +572,3 @@ class MainWindow(QMainWindow):
         self.sc.fig.savefig("optical_path.jpg")
 
 
-app = QApplication(sys.argv)
-
-window = MainWindow()   
-window.show()
-
-app.exec()
