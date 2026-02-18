@@ -9,6 +9,7 @@ class Laser():
     Attributs:
         wavelength (float): Longueur d'onde du laser (en nm ou m selon l'unité choisie).
         k_vector (tuple): Vecteur d'onde (k_x, k_y) représentant la direction de propagation.
+        stokes_vector (boolean) : Vecteur à 4 dimensions décrivant le type de polarisation dans la représentation de Stokes
     """
     def __init__(self, wavelength, k_vector, stokes_vector = None): #, intensity = 1):
         self.wavelength = wavelength
@@ -17,7 +18,8 @@ class Laser():
             self.stokes = np.array([1,0,0,0]) 
         else :
             self.stokes = stokes_vector
-    @property
+    
+    @property #Descripteur : permet d'aller chercher la valeur d'intensité du faisceau dans la definition sans utiliser de parenthèse 
     def intensity(self):
         return self.stokes[0] 
     
@@ -36,6 +38,7 @@ class Mirror(Instruments):
     Attributs:
         orientation (tuple): Vecteur d'orientation du miroir (mx, my).
         reflectivity (float): Coefficient de réflectivité du miroir (0 à 1).
+        name (booleans) : Condition sur l'attribution d'un nom ou pas à l'instrument 
     """
 
     def __init__(self, orientation_vector, reflectivity, name = None):
@@ -58,19 +61,19 @@ class Mirror(Instruments):
         mx, my = self.orientation
         kx_init, ky_init = k_init
         
-        #calculation of theta, angle of inclination of the mirror with respect to x
+        #Calcul de theta, l'angle d'inclinaison du miroir par rapprt à l'axe x 
         if mx != 0:
             theta = -np.pi/2 + np.arctan(my/mx) 
         else :
             theta = 0
 
-        #calculation of the reflected k vector k_out
+        #Calcul du vecteur k réflechi defini comme étant k_out
         kx_theta = kx_init*np.cos(2*theta) + ky_init*np.sin(2*theta)
         ky_theta = - ky_init*np.cos(2*theta) + kx_init*np.sin(2*theta)
         k_out = (kx_theta, ky_theta)
 
+        #Initialisation de la polarisation sur le BS 
         stokes_in = rayon.stokes.copy()
-
         stokes_out = stokes_in * self.reflectivity
         return Laser(wvl, k_out, stokes_vector=stokes_out)
    
@@ -89,13 +92,13 @@ class Mirror(Instruments):
         x_position, y_position = position
         mx, my = self.orientation
 
-        #calculation of theta, angle of inclination of the mirror with respect to x
+        #Calcul de theta, l'angle d'inclinaison du miroir suivant l'axe x
         if mx != 0:
             theta = - np.pi/2 + np.arctan(my/mx)
         else :
             theta = 0
         
-        #calculation of arrays (x_array, y_array) representing the mirror in (x,y) plane as a segment
+        #Calcul des arrays (x_array, y_array) representant le miroir sur le plan (x,y) comme un segment 
         x_max = x_position + np.cos(theta)*length/2
         x_min = x_position - np.cos(theta)*length/2
 
@@ -116,6 +119,7 @@ class BeamSplitter(Instruments):
     Attributs:
         orientation (tuple): Vecteur d'orientation (mx, my).
         ratio (float): Ratio de transmission/réflexion de 0.5 pour un BS 50:50).
+        name (boolean): Condition d'attribution d'un nom à l'instrument
     """
 
     def __init__(self, orientation_vector, ratio=0.5, name = None):
@@ -174,7 +178,7 @@ class BeamSplitter(Instruments):
         else:
             theta = 0
 
-        # Calcul des vecteurs
+        # Calcul des vecteurs afin de dessiner le BS 
         # Rayon du cercle qui englobe le carré (demi-longueur de la diagonale)
         r = length / 2
         
@@ -192,22 +196,22 @@ class BeamSplitter(Instruments):
         p3 = (xc - dy, yc + dx)
         p4 = (xc + dy, yc - dx)
 
-        # Construction des tracés
-        
-        # SEGMENT A (Bleu) : La diagonale active (de P1 à P2)
+        # Construction des tracés afin d'obtenir le schéma classique du BS      
+        # SEGMENT A : La diagonale active (de P1 à P2)
         x_diag = np.array([p1[0], p2[0]])
         y_diag = np.array([p1[1], p2[1]])
 
-        # SEGMENT B (Noir) : Le contour du carré
+        # SEGMENT B : Le contour du carré
         # On relie les points dans l'ordre du périmètre : P1 -> P4 -> P2 -> P3 -> P1
-        # (L'ordre P3/P4 dépend du sens trigo, mais tant qu'on fait le tour, c'est bon)
         x_box = np.array([p1[0], p4[0], p2[0], p3[0], p1[0]])
         y_box = np.array([p1[1], p4[1], p2[1], p3[1], p1[1]])
 
         return [(x_diag, y_diag), (x_box, y_box)]
 
 class Polarizer(Instruments): 
-
+    """
+    Représente un polariseur changeant la polarisation du faisceau incident en fonction de l'angle du polariseur
+    """
     def __init__(self, orientation_vector , angle_deg, name = None):
         self.orientation = orientation_vector
         self.angle_deg = angle_deg 
