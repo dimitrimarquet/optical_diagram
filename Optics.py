@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from test_wvl import wavelength_to_rgb
+from wvl_color_generator import wavelength_to_rgb
 
 class Laser():
     """
@@ -343,12 +343,10 @@ class TableOptique(dict):
                         label_text = "BS"
                     elif isinstance(optics, Polarizer):
                         label_text = f"Pol {optics.angle_deg}°"
-                print("draw_etx")
                 x_cen, y_cen = self[optics]
                 ax.text(x_cen + 1 ,y_cen + 1, label_text, color = 'black', fontsize = 9, ha = 'center', fontweight = 'bold')
 
         else:
-            print('test')
             for optics in self.keys():
                 list_of_segments = optics.display(self[optics])
 
@@ -381,7 +379,6 @@ class TableOptique(dict):
                         label_text = "BS"
                     elif isinstance(optics, Polarizer):
                         label_text = f"Pol {optics.angle_deg}°"
-                print("draw_etx")
                 x_cen, y_cen = self[optics]
                 ax.text(x_cen + 1 ,y_cen + 1, label_text, color = 'black', fontsize = 9, ha = 'center', fontweight = 'bold')
 
@@ -460,15 +457,11 @@ class TableOptique(dict):
                 #test to be in the cone if the angle with respect to x is between the two
                 test_max = np.arccos(min(scalar_max, 1)) < np.arccos(min(np.dot(np.array([kmax_x, kmax_y])/norm_max, np.array([kmin_x, kmin_y])/norm_min), 1))
                 test_min = np.arccos(min(scalar_min, 1)) < np.arccos(min(np.dot(np.array([kmax_x, kmax_y])/norm_max, np.array([kmin_x, kmin_y])/norm_min), 1))
-                print('test', np.array([kmax_x, kmax_y])/norm_max)
-                print('test', np.array([kmin_x, kmin_y])/norm_min)
 
                 test_optics_in_cone = scalar_max > 0 and scalar_min > 0 and test_max and test_min
 
                 if test_optics_in_cone and optics not in used_optics[-1:]:
                     list_optics_in_cone.append(optics)
-                    print(i, list_optics_in_cone)
-                    print(ky_init, kx_init)
 
             
             if len(list_optics_in_cone) != 0:
@@ -551,7 +544,6 @@ class TableOptique(dict):
 
                 if outputs is not None: 
                     outputs.append(ray)
-                    print('test output')
             i += 1
             
         segments.append((x_array, y_array, ray.intensity))  
@@ -599,7 +591,6 @@ class TableOptique(dict):
             f.write(f"Source Lambda : {laser.wavelength} nm\n")
             f.write(f"Source Stokes : {laser.stokes}\n")
             f.write("-" * 40 + "\n\n")
-            print(len(final_beam))
             if not final_beam:
                 f.write("Aucune faisceau n'est sorti de la table")
 
