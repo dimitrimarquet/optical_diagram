@@ -1,7 +1,7 @@
 from msilib.schema import InstallUISequence
 import numpy as np
 import matplotlib.pyplot as plt
-from test_wvl import wavelength_to_rgb
+from wvl_color_generator import wavelength_to_rgb
 
 class Laser():
     """
